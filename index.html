@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ryvexo - Nauč se vyvíjet profesionální PC hry v Unity.">
+    <title>Ryvexo | Vývoj her v Unity</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Dynamické pozadí -->
+    <div class="bg-mesh"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigace -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="logo - kopie.png" alt="Ryvexo Logo" class="brand-logo">
+                <span>RYVEXO</span>
+            </div>
+            
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" class="nav-link active">Domů</a></li>
+                <li><a href="#learn" class="nav-link">Výuka</a></li>
+                <li><a href="#tutorials" class="nav-link">Tutoriály</a></li>
+                <li><a href="#roadmap" class="nav-link">Roadmapa</a></li>
+                <li><a href="#community" class="nav-link">Komunita</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="icon-btn" id="searchBtn" aria-label="Hledat (Ctrl+K)" title="Hledat">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button class="icon-btn" id="themeToggleBtn" aria-label="Přepnout motiv" title="Světlý/Tmavý režim">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+                <div id="authContainer">
+                    <button class="btn btn-outline" id="loginBtnNav">Přihlásit se</button>
+                </div>
+                <button class="hamburger" id="hamburgerMenu" aria-label="Menu">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hlavní obsah -->
+    <main>
+        <!-- Hero Sekce -->
+        <section id="home" class="section hero-section active-section">
+            <div class="hero-content fade-in">
+                <div class="badge">Nová éra herního vývoje</div>
+                <h1 class="hero-title">TVOŘ.<br><span class="gradient-text">PROGRAMUJ.</span><br>HRAJ.</h1>
+                <p class="hero-subtitle">Připoj se ke kroužku Ryvexo. Nauč se vyvíjet vlastní PC hry v Unity, ovládni C# a staň se tvůrcem světů.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-glow" onclick="navigateTo('learn')">
+                        <i class="fa-solid fa-play"></i> ZAČÍT S VÝUKOU
+                    </button>
+                    <button class="btn btn-outline" onclick="navigateTo('tutorials')">PROZKOUMAT TUTORIÁLY</button>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-number" data-target="120">0</span>+
+                        <span class="stat-label">Lekcí</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" data-target="35">0</span>
+                        <span class="stat-label">Projektů</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" data-target="18">0</span>
+                        <span class="stat-label">Systémů</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-visual fade-in">
+                <div class="hologram-container">
+                    <div class="code-editor-mockup">
+                        <div class="editor-header">
+                            <div class="mac-btns">
+                                <span class="mac-btn close"></span>
+                                <span class="mac-btn minimize"></span>
+                                <span class="mac-btn maximize"></span>
+                            </div>
+                            <div class="editor-title">PohybHrace.cs</div>
+                            <button class="copy-btn" id="copyHeroCode" aria-label="Kopírovat kód" title="Zkopírovat do schránky">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="editor-body">
+<pre><code><span class="keyword">using</span> UnityEngine;
+
+<span class="keyword">public class</span> <span class="class-name">PohybHrace</span> : <span class="class-name">MonoBehaviour</span>
+{
+    <span class="keyword">public float</span> rychlost = <span class="number">5f</span>;
+
+    <span class="keyword">void</span> <span class="method">Update</span>()
+    {
+        <span class="comment">// Načtení vstupu od hráče</span>
+        <span class="keyword">float</span> h = Input.GetAxis(<span class="string">"Horizontal"</span>);
+        <span class="keyword">float</span> v = Input.GetAxis(<span class="string">"Vertical"</span>);
+
+        <span class="class-name">Vector3</span> pohyb = <span class="keyword">new</span> <span class="class-name">Vector3</span>(h, <span class="number">0</span>, v);
+        transform.Translate(pohyb * rychlost * Time.deltaTime);
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Výuka Sekce -->
+        <section id="learn" class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Studijní <span class="gradient-text">Plány</span></h2>
+                    <p style="color: var(--text-sec); margin-top: 5px;">Vyber si cestu, kterou se chceš vydat.</p>
+                </div>
+                <div class="filters" id="courseFilters">
+                    <button class="filter-btn active" data-filter="all">Vše</button>
+                    <button class="filter-btn" data-filter="basics">Základy</button>
+                    <button class="filter-btn" data-filter="programming">C# a Logika</button>
+                    <button class="filter-btn" data-filter="3d">3D a Fyzika</button>
+                </div>
+            </div>
+            <div class="grid-container" id="coursesGrid">
+                <!-- Vykreslováno přes JS -->
+            </div>
+        </section>
+
+        <!-- Tutoriály Sekce -->
+        <section id="tutorials" class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Rychlé <span class="gradient-text">Tutoriály</span></h2>
+                    <p style="color: var(--text-sec); margin-top: 5px;">Krátké návody na konkrétní mechaniky.</p>
+                </div>
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="tutorialSearch" placeholder="Hledat tutoriály (např. UI, střelba)...">
+                </div>
+            </div>
+            <div class="list-container" id="tutorialsList">
+                <!-- Vykreslováno přes JS -->
+            </div>
+        </section>
+
+        <!-- Roadmapa Sekce -->
+        <section id="roadmap" class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Vývojářská <span class="gradient-text">Roadmapa</span></h2>
+                    <p style="color: var(--text-sec); margin-top: 5px;">Sleduj svůj postup od začátečníka po mistra.</p>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>TVŮJ POSTUP</span>
+                        <span id="roadmapPercentage" class="gradient-text" style="font-weight: 700;">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="roadmapFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="roadmap-timeline" id="roadmapTimeline">
+                <!-- Vykreslováno přes JS -->
+            </div>
+        </section>
+
+        <!-- Komunita Sekce -->
+        <section id="community" class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Ryvexo <span class="gradient-text">Komunita</span></h2>
+                    <p style="color: var(--text-sec); margin-top: 5px;">Sdílej své projekty a ptej se na rady.</p>
+                </div>
+                <button class="btn btn-primary" id="newPostBtn">
+                    <i class="fa-solid fa-pen"></i> Nový příspěvek
+                </button>
+            </div>
+            
+            <div class="post-form-container hidden" id="postFormContainer">
+                <div class="card glass-card">
+                    <textarea id="postContent" placeholder="Na čem zrovna pracuješ? Sdílej to s ostatními..." rows="3"></textarea>
+                    <div class="form-actions">
+                        <input type="text" id="postTag" placeholder="#tag (např. #csharp)">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-outline" id="cancelPostBtn">Zrušit</button>
+                            <button class="btn btn-primary" id="submitPostBtn">Odeslat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="community-feed" id="communityFeed">
+                <!-- Vykreslováno přes JS -->
+            </div>
+        </section>
+
+        <!-- Dashboard Sekce -->
+        <section id="dashboard" class="section">
+            <div class="dashboard-grid">
+                <div class="card glass-card user-profile-card">
+                    <div class="avatar-large">
+                        <img src="logo - kopie.png" alt="Ryvexo Avatar" style="width: 60%; height: auto; filter: brightness(0) invert(1);">
+                    </div>
+                    <h2 id="dashUsername" style="font-family: 'Rajdhani', sans-serif; font-size: 2rem;">Uživatel</h2>
+                    <div class="level-badge">ÚROVEŇ <span id="dashLevel">1</span></div>
+                    <div class="xp-bar-container">
+                        <div class="xp-bar" id="dashXpBar" style="width: 0%"></div>
+                    </div>
+                    <p class="xp-text"><span id="dashXp" class="gradient-text" style="font-weight: 700;">0</span> XP</p>
+                </div>
+                
+                <div class="card glass-card stats-card">
+                    <h3 style="margin-bottom: 1.5rem; font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;"><i class="fa-solid fa-medal gradient-text"></i> Odznaky a úspěchy</h3>
+                    <ul class="achievements-list" id="achievementsList">
+                        <!-- Vykreslováno přes JS -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Patička -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <img src="logo - kopie.png" alt="Ryvexo Logo" class="brand-logo" style="height: 30px;">
+                    RYVEXO
+                </div>
+                <p>Tvoříme budoucnost herního vývoje.</p>
+            </div>
+            <div class="footer-socials">
+                <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Ryvexo. Všechna práva vyhrazena.</p>
+        </div>
+    </footer>
+
+    <!-- Modální okna -->
+
+    <!-- Hledání -->
+    <div class="modal" id="searchModal">
+        <div class="modal-content glass-card search-modal-content">
+            <div class="search-modal-header">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="globalSearchInput" placeholder="Hledat kurzy, tutoriály... (Esc pro zavření)">
+            </div>
+            <div class="search-results" id="searchResults">
+                <div class="empty-state">Začni psát pro vyhledávání...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Přihlášení -->
+    <div class="modal" id="authModal">
+        <div class="modal-content glass-card auth-modal-content">
+            <span class="close-modal" id="closeAuthModal">&times;</span>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Přihlášení</button>
+                <button class="auth-tab" data-tab="register">Registrace</button>
+            </div>
+            
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="loginEmail" required value="student@ryvexo.cz">
+                </div>
+                <div class="form-group">
+                    <label>Heslo</label>
+                    <input type="password" id="loginPassword" required value="ryvexo123">
+                </div>
+                <div class="form-message error hidden" id="loginError">Nesprávné údaje</div>
+                <button type="submit" class="btn btn-primary btn-full">Přihlásit se</button>
+            </form>
+
+            <form id="registerForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label>Uživatelské jméno</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Heslo</label>
+                    <input type="password" id="regPassword" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Vytvořit účet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifikace -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
