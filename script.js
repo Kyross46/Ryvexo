@@ -986,6 +986,9 @@ function initDashboard() {
             let progressPct = ((currentUser.xp - prevLvlXp) / (nextLvlXp - prevLvlXp)) * 100;
             if (progressPct > 100) progressPct = 100; 
             document.getElementById('dashXpBar').style.width = `${progressPct}%`;
+
+            const remainingXp = nextLvlXp - currentUser.xp;
+            document.getElementById('dashNextLevelText').textContent = `Do další úrovně zbývá ${remainingXp} XP`;
             
             const iconEl = document.getElementById('dashAvatarIcon');
             if(iconEl) {
