@@ -62,7 +62,7 @@
                     <input type="password" id="regPassword" required placeholder="Vytvoř si heslo" minlength="6">
                 </div>
                 <div class="form-group">
-                    <label>Tajný kód (od učitele)</label>
+                    <label>Tajný kód</label>
                     <input type="password" id="regSecret" required placeholder="Zadej přístupový kód" style="border-color: var(--accent-purple);">
                 </div>
                 <button type="submit" class="btn btn-primary btn-full"><i class="fa-solid fa-user-plus"></i> Vytvořit účet</button>
@@ -86,6 +86,7 @@
                     <li><a href="#quizzes" class="nav-link">Kvízy</a></li>
                     <li><a href="#leaderboard" class="nav-link">Žebříček</a></li>
                     <li><a href="#community" class="nav-link">Komunita</a></li>
+                    <li><a href="#" onclick="openWikiModal()" class="nav-link" style="color: var(--accent-cyan);"><i class="fa-solid fa-book"></i> Slovníček</a></li>
                     <li><a href="#dashboard" class="nav-link" id="navDashboardLink">Profil</a></li>
                 </ul>
                 <div class="nav-actions">
@@ -109,9 +110,9 @@
                         <button class="btn btn-outline" onclick="navigateTo('tutorials')">PROZKOUMAT TUTORIÁLY</button>
                     </div>
                     <div class="stats-container">
-                        <div class="stat-box"><span class="stat-number" data-target="120">0</span>+<span class="stat-label">Lekcí</span></div>
-                        <div class="stat-box"><span class="stat-number" data-target="35">0</span><span class="stat-label">Projektů</span></div>
-                        <div class="stat-box"><span class="stat-number" data-target="18">0</span><span class="stat-label">Systémů</span></div>
+                        <div class="stat-box"><span class="stat-number" id="statLekce" data-target="0">0</span><span class="stat-label">Výukových lekcí</span></div>
+                        <div class="stat-box"><span class="stat-number" id="statTuts" data-target="0">0</span><span class="stat-label">Tutoriálů k řešení</span></div>
+                        <div class="stat-box"><span class="stat-number" id="statUsers" data-target="0">0</span><span class="stat-label">Registrovaných tvůrců</span></div>
                     </div>
                 </div>
                 <div class="hero-visual fade-in">
@@ -142,9 +143,13 @@
                 </div>
             </section>
 
-            <section id="learn" class="section">
+           <section id="learn" class="section">
                 <div class="section-header">
-                    <div><h2 class="section-title">Studijní <span class="gradient-text">Plány</span></h2></div>
+                    <div>
+                        <span class="badge" style="margin-bottom: 10px;">STRUKTUROVANÁ VÝUKA</span>
+                        <h2 class="section-title">Studijní <span class="gradient-text">Plány</span></h2>
+                        <p style="color: var(--text-sec);">Komplexní kurzy od úplných základů až po profesionální systémy.</p>
+                    </div>
                     <div class="filters" id="courseFilters">
                         <button class="filter-btn active" data-filter="all">Vše</button>
                         <button class="filter-btn" data-filter="basics">Základy</button>
@@ -157,7 +162,11 @@
 
             <section id="tutorials" class="section">
                 <div class="section-header">
-                    <div><h2 class="section-title">Rychlé <span class="gradient-text">Tutoriály</span></h2></div>
+                    <div>
+                        <span class="badge" style="margin-bottom: 10px; background: rgba(138, 43, 226, 0.1); border-color: var(--accent-purple); color: #d8b4fe;">ŘEŠENÍ PROBLÉMŮ</span>
+                        <h2 class="section-title">Praktické <span class="gradient-text">Tutoriály</span></h2>
+                        <p style="color: var(--text-sec);">Rychlé návody na specifické herní mechaniky (otevírání dveří, inventář, zbraně).</p>
+                    </div>
                     <div class="search-box"><i class="fa-solid fa-search"></i><input type="text" id="tutorialSearch" placeholder="Hledat tutoriály..."></div>
                 </div>
                 <div class="list-container" id="tutorialsList"></div>
@@ -222,16 +231,30 @@
                 <!-- STUDENTSKÝ POHLED -->
                 <div class="dashboard-grid" id="studentDashboard">
                     <div class="card glass-card user-profile-card">
-                        <div class="avatar-large"><img src="logo - kopie.png" alt="Ryvexo Avatar" style="width: 60%; height: auto; filter: brightness(0) invert(1);"></div>
+                        <div class="avatar-large" id="dashAvatarIcon">
+                            <i class="fa-solid fa-user-astronaut" style="font-size: 3.5rem; color: #fff;"></i>
+                        </div>
                         <h2 id="dashUsername" style="font-family: 'Rajdhani', sans-serif; font-size: 2rem;">Student</h2>
+                        <div id="dashTitle" class="user-title title-lvl-1">Tester</div>
                         <div class="level-badge">ÚROVEŇ <span id="dashLevel">1</span></div>
                         <div class="xp-bar-container"><div class="xp-bar" id="dashXpBar" style="width: 0%"></div></div>
                         <p class="xp-text"><span id="dashXp" class="gradient-text" style="font-weight: 700;">0</span> XP</p>
                     </div>
+                    
                     <div class="card glass-card stats-card">
                         <h3 style="margin-bottom: 1.5rem; font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;"><i class="fa-solid fa-medal gradient-text"></i> Odznaky a úspěchy</h3>
                         <ul class="achievements-list" id="achievementsList"></ul>
                     </div>
+                    
+                    <!-- NOVÉ: Obchod s Avatary -->
+                    <div class="card glass-card" style="grid-column: 1 / -1; margin-top: 1rem;">
+                        <h3 style="margin-bottom: 1rem; font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;"><i class="fa-solid fa-store gradient-text"></i> Úprava profilu (Skiny)</h3>
+                        <p style="color: var(--text-sec); font-size: 0.95rem;">Odemkni si nové avatary za nasbírané XP. Tvá volba se projeví všem v žebříčku a komunitě!</p>
+                        <div class="avatar-shop-grid" id="avatarShopGrid">
+                            <!-- JS sem vygeneruje obchod -->
+                        </div>
+                    </div>
+
                     <div class="card glass-card" style="grid-column: 1 / -1; margin-top: 1rem;">
                         <h3 style="margin-bottom: 1.5rem; font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;"><i class="fa-solid fa-upload gradient-text"></i> Odevzdat projekt</h3>
                         <div class="form-group"><label>Název hry / Úkolu</label><input type="text" id="projTitle" placeholder="Např. Základní plošinovka v0.1"></div>
@@ -268,13 +291,37 @@
                             <button class="btn btn-outline" id="tabQuizBtn" onclick="switchAdminTab('quiz')">Nový Kvíz</button>
                         </div>
                         <div id="adminFormTut">
+                            <!-- Administrační formuláře -->
                             <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
                                 <div style="flex: 2; min-width: 200px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Název</label><input type="text" id="addTutTitle" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
                                 <div style="flex: 1; min-width: 100px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Kategorie</label><input type="text" id="addTutCategory" placeholder="např. UI" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
                                 <div style="flex: 1; min-width: 100px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Čas</label><input type="text" id="addTutTime" placeholder="např. 10 min" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
                             </div>
-                            <div style="margin-bottom: 15px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Krátký popis</label><input type="text" id="addTutDesc" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
-                            <div style="margin-bottom: 15px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Obsah (HTML)</label><textarea id="addTutContent" rows="4" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px; resize: vertical; font-family: 'Fira Code', monospace;"></textarea></div>
+                            <div style="margin-bottom: 15px;"><label style="font-size: 0.85rem; color: var(--text-sec);">Krátký popis (na kartu)</label><input type="text" id="addTutDesc" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                            
+                            <!-- NOVÝ ŠABLONOVÝ EDITOR PRO UČITELE -->
+                            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 15px;">
+                                <h4 style="color: var(--accent-cyan); margin-bottom: 15px; font-family: 'Rajdhani', sans-serif;"><i class="fa-solid fa-layer-group"></i> Obsah v nové šabloně</h4>
+                                
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: var(--accent-cyan);">1. Cíl lekce/tutoriálu</label><input type="text" id="tplCil" placeholder="Co se dnes naučíme..." style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: var(--accent-purple);">2. Potřebné znalosti</label><input type="text" id="tplZnalosti" placeholder="Co už by měl student znát..." style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                                
+                                <div style="margin-bottom: 10px;">
+                                    <label style="font-size: 0.85rem; color: var(--text-main);">3. Postup (Kroky)</label>
+                                    <div class="editor-toolbar">
+                                        <button type="button" class="editor-btn" onclick="insertFormat('tplPostup', 'b')"><i class="fa-solid fa-bold"></i></button>
+                                        <button type="button" class="editor-btn" onclick="insertFormat('tplPostup', 'i')"><i class="fa-solid fa-italic"></i></button>
+                                        <button type="button" class="editor-btn" onclick="insertList('tplPostup')"><i class="fa-solid fa-list-ul"></i> Seznam</button>
+                                    </div>
+                                    <textarea id="tplPostup" rows="4" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 4px; resize: vertical;"></textarea>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: var(--accent-blue);">4. Kód (C#)</label><textarea id="tplKod" rows="4" placeholder="Zkopíruj kód sem (vloží se rovnou do barevného bloku)..." style="width: 100%; padding: 8px; background: #09090b; border: 1px solid var(--border); color: #e5c07b; font-family: monospace; border-radius: 4px; resize: vertical;"></textarea></div>
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: #f87171;">5. Časté chyby</label><input type="text" id="tplChyby" placeholder="Na co si dát pozor..." style="width: 100%; padding: 8px; background: rgba(248, 113, 113, 0.05); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: #fbbf24;">6. Praktický úkol</label><input type="text" id="tplUkol" placeholder="Co má student udělat sám..." style="width: 100%; padding: 8px; background: rgba(251, 191, 36, 0.05); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                                <div style="margin-bottom: 10px;"><label style="font-size: 0.85rem; color: #4ade80;">7. Kontrola výsledku</label><input type="text" id="tplKontrola" placeholder="Jak poznám, že to funguje..." style="width: 100%; padding: 8px; background: rgba(74, 222, 128, 0.05); border: 1px solid var(--border); color: #fff; border-radius: 4px;"></div>
+                            </div>
+
                             <button class="btn btn-primary" id="saveTutBtn"><i class="fa-solid fa-plus"></i> Publikovat tutoriál</button>
                         </div>
                         <div id="adminFormQuiz" class="hidden">
@@ -352,6 +399,15 @@
                 <span class="close-modal" id="closeTutorialModal">&times;</span>
                 <h2 id="tutorialModalTitle" style="margin-bottom: 1rem; color: var(--accent-cyan); font-family: 'Rajdhani', sans-serif;">Název tutoriálu</h2>
                 <div id="tutorialModalContent" style="color: var(--text-sec); line-height: 1.6; font-size: 1.05rem;"></div>
+            </div>
+        </div>
+
+        <!-- WIKI MODÁL -->
+        <div class="modal" id="wikiModal">
+            <div class="modal-content glass-card search-modal-content">
+                <div class="search-modal-header"><i class="fa-solid fa-book" style="color: var(--accent-purple);"></i><input type="text" id="wikiSearchInput" placeholder="Hledat v herním slovníčku (např. Rigidbody)..."></div>
+                <div class="search-results" id="wikiResults"></div>
+                <button class="btn btn-outline" style="margin: 15px; width: calc(100% - 30px);" onclick="document.getElementById('wikiModal').classList.remove('show')">Zavřít</button>
             </div>
         </div>
 

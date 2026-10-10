@@ -605,3 +605,121 @@ footer {
         max-height: 180px;
     }
 }
+/* --- ZAMČENÉ KURZY (RPG SKILL TREE) --- */
+.course-card.locked {
+    opacity: 0.6;
+    filter: grayscale(80%);
+    pointer-events: none; /* Zamezí klikání na celou kartu */
+}
+.locked-badge {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: rgba(0,0,0,0.8);
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: #f87171;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 5;
+}
+
+/* --- CMS EDITOR TLAČÍTKA --- */
+.editor-toolbar {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 8px;
+    background: rgba(0,0,0,0.4);
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+.editor-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+}
+.editor-btn:hover {
+    background: var(--accent-cyan);
+    color: #000;
+    border-color: var(--accent-cyan);
+}
+/* --- KOMENTÁŘE V KOMUNITĚ --- */
+.comments-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+.comment-item { background: rgba(0,0,0,0.2); padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95rem; }
+.comment-input-group { display: flex; gap: 10px; margin-top: 10px; }
+.comment-input-group input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 4px; outline: none; font-family: inherit;}
+.comment-input-group input:focus { border-color: var(--accent-cyan); }
+
+/* --- OBCHOD S AVATARY --- */
+.avatar-shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 15px; margin-top: 15px; }
+.avatar-shop-item { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 15px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.avatar-shop-item:hover { border-color: var(--accent-cyan); background: rgba(0, 210, 255, 0.05); transform: translateY(-3px); }
+.avatar-shop-item i { font-size: 2rem; margin-bottom: 10px; color: var(--text-main); transition: color 0.2s;}
+.avatar-shop-item .price { font-size: 0.85rem; color: var(--accent-purple); font-weight: bold; font-family: 'Rajdhani', sans-serif; }
+.avatar-shop-item.owned { border-color: #4ade80; background: rgba(74, 222, 128, 0.05); }
+.avatar-shop-item.owned .price { color: #4ade80; }
+
+/* --- RPG TITULY A RÁMEČKY --- */
+.avatar-icon-small {
+    display: inline-flex; justify-content: center; align-items: center;
+    width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.4); flex-shrink: 0;
+}
+.frame-lvl-1 { border: 2px solid #94a3b8; box-shadow: 0 0 8px rgba(148,163,184,0.2); } /* Tester */
+.frame-lvl-3 { border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(59,130,246,0.5); } /* Junior */
+.frame-lvl-5 { border: 2px solid #fbbf24; box-shadow: 0 0 15px rgba(251,191,36,0.7); } /* Senior */
+.frame-lvl-10 { border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239,68,68,0.9); } /* Architekt */
+
+.user-title {
+    font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; 
+    font-weight: 800; margin-bottom: 1.5rem; font-family: 'Rajdhani', sans-serif;
+}
+.title-lvl-1 { color: #94a3b8; }
+.title-lvl-3 { color: #3b82f6; }
+.title-lvl-5 { color: #fbbf24; }
+.title-lvl-10 { color: #ef4444; }
+
+/* --- REAKCE A WIKI --- */
+.action-btn.active-react { color: var(--accent-purple); font-weight: bold; }
+#wikiResults .empty-state { text-align: center; color: var(--text-sec); padding: 2rem; }
+.wiki-item { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid var(--accent-purple); }
+.wiki-item h4 { color: var(--accent-cyan); font-size: 1.2rem; margin-bottom: 4px; font-family: 'Rajdhani', sans-serif; }
+
+/* --- JEDNOTNÁ ŠABLONA LEKCE --- */
+.lesson-template { display: flex; flex-direction: column; gap: 1.5rem; }
+.template-section { padding: 1.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border-left: 3px solid transparent; }
+.template-section h4 { margin-bottom: 10px; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+
+.template-section.objective { border-color: var(--accent-cyan); background: rgba(0, 210, 255, 0.05); }
+.template-section.objective h4 { color: var(--accent-cyan); }
+
+.template-section.knowledge { border-color: var(--accent-purple); }
+.template-section.knowledge h4 { color: var(--accent-purple); }
+
+.template-section.steps { border-color: var(--text-sec); }
+.template-section.steps h4 { color: var(--text-main); }
+
+.template-section.code-block { border-color: var(--accent-blue); padding: 0; overflow: hidden;}
+.template-section.code-block h4 { color: var(--accent-blue); padding: 1rem 1.5rem 0; }
+.template-section.code-block pre { background: #09090b; padding: 15px; overflow-x: auto; margin: 10px; border-radius: 6px; }
+
+.template-section.errors { border-color: #f87171; background: rgba(248, 113, 113, 0.05); }
+.template-section.errors h4 { color: #f87171; }
+
+.template-section.task { border-color: #fbbf24; background: rgba(251, 191, 36, 0.05); }
+.template-section.task h4 { color: #fbbf24; }
+
+.template-section.check { border-color: #4ade80; background: rgba(74, 222, 128, 0.05); }
+.template-section.check h4 { color: #4ade80; }
