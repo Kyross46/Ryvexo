@@ -1,8 +1,8 @@
 /**
- * RYVEXO - Frontendová logika webové aplikace
+ * RYVEXO - Frontendová logika (Nyní napojená na centrální API)
  */
 
-// --- DYNAMICKÁ DATA PRO VÝUKU ---
+// --- DYNAMICKÁ DATA PRO VÝUKU (VÝCHOZÍ) ---
 const defaultCourses = [
     { 
         id: 1, title: "Základy C#", category: "programming", desc: "Proměnné, podmínky, cykly a základy programátorské logiky pro Unity.", difficulty: "Začátečník", lessons: 5, icon: "fa-code",
@@ -126,57 +126,105 @@ const defaultCourses = [
     }
 ];
 
-let savedCourses = JSON.parse(localStorage.getItem('ryvexo-courses-data'));
-let coursesData = (savedCourses && savedCourses.length >= 14) ? savedCourses : defaultCourses;
-
-
 // --- DYNAMICKÁ DATA PRO TUTORIÁLY ---
 const defaultTutorials = [
     { 
-        id: 1, title: "1. Pohyb hráče (WASD)", desc: "Základní skript pro pohyb postavy po zemi.", category: "Hratelnost", time: "10 min",
-        template: { cil: "Naprogramovat základní pohyb po 3D podlaze bez fyziky.", znalosti: "Input.GetAxis z kurzů.", postup: "<p>1. V okně Hierarchy vytvoř 3D Object -> Cube (Hráč).<br>2. Vytvoř další větší Cube jako podlahu a roztáhni ji.<br>3. Přidej hráči nový skript PohybHrace.</p>", kod: "using UnityEngine;\npublic class PohybHrace : MonoBehaviour {\n    public float rychlost = 5f;\n    void Update() {\n        float h = Input.GetAxis(\"Horizontal\");\n        float v = Input.GetAxis(\"Vertical\");\n        transform.Translate(new Vector3(h, 0, v) * rychlost * Time.deltaTime);\n    }\n}", chyby: "Slovo 'Horizontal' musí být přesně s velkým H, jinak Unity vyhodí chybu.", ukol: "Místo Input.GetAxis použij GetKeyDown a pohybuj se šipkami trhaně jako na šachovnici.", kontrola: "Po zmáčknutí W nebo Šipky Nahoru se hráč plynule rozjede dopředu." }
+        id: 1, title: "1. FPS Ovladač Hráče (WASD)", desc: "Plynulý pohyb, gravitace a skákání pomocí Character Controlleru.", category: "Pohyb", time: "15 min",
+        template: { 
+            cil: "Nahradit trhaný základní pohyb za plynulé profi chození s rozhlížením myší.", 
+            znalosti: "Přidání komponenty Character Controller.", 
+            postup: "<p>1. Vytvoř hráči objekt typu Capsule a dej mu tag 'Player'.<br>2. Přidej komponentu <b>Character Controller</b>.<br>3. Přiřaď mu kameru do proměnné <code>cameraHolder</code>.</p>", 
+            kod: `using UnityEngine;\n\npublic class PlayerMovement : MonoBehaviour\n{\n    public float speed = 5f;\n    public float jumpHeight = 2f;\n    public float gravity = -9.81f;\n    public Transform cameraHolder;\n    public float mouseSensitivity = 200f;\n\n    private CharacterController controller;\n    private Vector3 velocity;\n    private float xRotation = 0f;\n\n    void Start()\n    {\n        controller = GetComponent<CharacterController>();\n        Cursor.lockState = CursorLockMode.Locked;\n        Cursor.visible = false;\n    }\n\n    void Update()\n    {\n        Look();\n        Move();\n    }\n\n    void Move()\n    {\n        bool grounded = controller.isGrounded;\n        if (grounded && velocity.y < 0) velocity.y = -2f;\n\n        float x = Input.GetAxis("Horizontal");\n        float z = Input.GetAxis("Vertical");\n        Vector3 move = transform.right * x + transform.forward * z;\n        controller.Move(move * speed * Time.deltaTime);\n\n        if (Input.GetButtonDown("Jump") && grounded)\n            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);\n\n        velocity.y += gravity * Time.deltaTime;\n        controller.Move(velocity * Time.deltaTime);\n    }\n\n    void Look()\n    {\n        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;\n        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;\n        xRotation -= mouseY;\n        xRotation = Mathf.Clamp(xRotation, -90f, 90f);\n        cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);\n        transform.Rotate(Vector3.up * mouseX);\n    }\n}`, 
+            chyby: "Pokud se kamera otáčí divně, ujisti se, že <code>cameraHolder</code> je prázdný objekt vevnitř hráče a samotná Camera je až v něm.", 
+            ukol: "Vyzkoušej přidat veřejnou metodu <code>Bounce(float force)</code> pro trampolínu, která přepíše <code>velocity.y</code>.", 
+            kontrola: "Hráč chodí plynule, myš je uzamčená ve hře a pohled se neprotáčí o 360 stupňů." 
+        }
     },
     { 
-        id: 2, title: "2. Skok a Gravitace", desc: "Přidání fyziky a naprogramování skoku mezerníkem.", category: "Fyzika", time: "10 min",
-        template: { cil: "Odpoutat se od země pomocí poctivé fyzikální síly.", znalosti: "Komponenta Rigidbody z kurzů.", postup: "<p>1. Označ hráče a v Inspectoru klikni na Add Component -> Rigidbody.<br>2. Nyní hráč začne padat. Přidej mu C# skript pro skok.</p>", kod: "using UnityEngine;\npublic class SkokHrace : MonoBehaviour {\n    public float silaSkoku = 7f;\n    private Rigidbody rb;\n    void Start() { rb = GetComponent<Rigidbody>(); }\n    void Update() {\n        if (Input.GetKeyDown(KeyCode.Space)) {\n            rb.AddForce(Vector3.up * silaSkoku, ForceMode.Impulse);\n        }\n    }\n}", chyby: "U AddForce nezapomeň nastavit režim ForceMode.Impulse, protože skok je jednorázový výbuch síly, ne plynulé tlačení.", ukol: "Dej pozor, že tento jednoduchý kód dovoluje 'Double Jump' i ve vzduchu. Zkus vymyslet, jak tomu zabránit.", kontrola: "Když padáš, a zmáčkneš mezerník, fyzika tě odrazí směrem vzhůru." }
+        id: 2, title: "2. Pohyblivá plošina", desc: "Plošina převážející hráče mezi body bez toho, aby z ní sklouzl.", category: "Překážky", time: "15 min",
+        template: { 
+            cil: "Naučit plošinu jezdit a hlavně zajistit, aby s sebou vezla hráče.", 
+            znalosti: "Vector3.MoveTowards a Triggery.", 
+            postup: "<p>1. Vytvoř Plošinu a přidej jí Trigger (Box Collider s Is Trigger).<br>2. Vytvoř 2 prázdné objekty (PointStart a PointEnd).<br>3. Dej pozor, ať hráč používá PlayerMovement z minulé lekce.</p>", 
+            kod: `using UnityEngine;\n\npublic class MovingPlatform : MonoBehaviour\n{\n    public Transform pointStart;\n    public Transform pointEnd;\n    public float speed = 3f;\n    private Vector3 currentTarget; \n    private CharacterController playerController;\n    private Vector3 lastPlatformPosition;\n\n    void Start()\n    {\n        currentTarget = pointEnd.position; \n        lastPlatformPosition = transform.position;\n    }\n\n    void Update()\n    {\n        transform.position = Vector3.MoveTowards(transform.position, currentTarget, speed * Time.deltaTime);\n        if (Vector3.Distance(transform.position, currentTarget) < 0.1f)\n        {\n            currentTarget = (currentTarget == pointEnd.position) ? pointStart.position : pointEnd.position;\n        }\n\n        if (playerController != null)\n        {\n            Vector3 platformMovement = transform.position - lastPlatformPosition;\n            playerController.Move(platformMovement + new Vector3(0, -0.02f, 0));\n        }\n        lastPlatformPosition = transform.position;\n    }\n\n    private void OnTriggerEnter(Collider other)\n    {\n        if (other.CompareTag("Player")) playerController = other.GetComponent<CharacterController>();\n    }\n\n    private void OnTriggerExit(Collider other)\n    {\n        if (other.CompareTag("Player")) playerController = null;\n    }\n}`, 
+            chyby: "Pokud Trigger není o malinko větší než samotná plošina, hráč z něj při chůzi vyskočí a plošina mu ujede.", 
+            ukol: "Rozšiř kód tak, aby uměl pracovat s polem bodů <code>Transform[] body</code> a jezdil např. po třech stanicích.", 
+            kontrola: "Plošina se pohybuje a když na ni skočíš, jedeš s ní a můžeš na ní plynule chodit." 
+        }
     },
     { 
-        id: 3, title: "3. Kamera sledující hráče", desc: "Základy balíčku Cinemachine pro plynulou kameru.", category: "Kamera", time: "5 min",
-        template: { cil: "Zajistit, aby kamera nespustila hráče z očí.", znalosti: "Instalace balíčků.", postup: "<p>1. Nahoře v menu klikni na Window -> Package Manager a nainstaluj Cinemachine.<br>2. Zvol Cinemachine -> Create Virtual Camera.<br>3. Z okna Hierarchy přetáhni svého Hráče (Cube) přímo do políček 'Follow' a 'Look At' u nové Virtual Camery.</p>", kod: "// Cinemachine se napojí do enginu samo. Stačí přetáhnout referenci.", chyby: "Jakmile vytvoříš Virtual Cameru, stará Main Camera je zcela ovládaná. Nemá smysl Main Camerou hýbat pomocí Transform v Inspectoru.", ukol: "V Inspectoru Virtual Camery najdi sekci 'Noise' a přidej drobný 'Basic Multi Channel Perlin' efekt chvění.", kontrola: "Ať se hneš kamkoliv, obrazovka plachtí plynule za tebou." }
+        id: 3, title: "3. Mechanika Slendermana (Pohled)", desc: "Nepřítel, co zaútočí, jen když se na něj blízko podíváte.", category: "Logika", time: "15 min",
+        template: { 
+            cil: "Použít vektorovou matematiku (úhly) ke zjištění, kam se hráč zrovna dívá.", 
+            znalosti: "Scény a Vector3.Angle.", 
+            postup: "<p>1. Vlož do scény děsivého démona.<br>2. Přetáhni do jeho políčka Transform od Hlavní Kamery hráče.</p>", 
+            kod: `using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class MechanikaPohledu : MonoBehaviour\n{\n    public Transform kameraHrace;\n    public float vzdalenostProPohled = 15f;\n    public float vzdalenostProDotyk = 1.5f;\n    public float zornePole = 60f;\n\n    void Update()\n    {\n        float vzdalenost = Vector3.Distance(transform.position, kameraHrace.position);\n        if (vzdalenost <= vzdalenostProDotyk)\n        {\n            KonecHry();\n        }\n        else \n        {\n            Vector3 smerKNepriteli = transform.position - kameraHrace.position;\n            float uhelPohledu = Vector3.Angle(kameraHrace.forward, smerKNepriteli);\n\n            if (uhelPohledu < (zornePole / 2f) && vzdalenost <= vzdalenostProPohled)\n            {\n                KonecHry();\n            }\n        }\n    }\n\n    void KonecHry()\n    {\n        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);\n    }\n}`, 
+            chyby: "Pokud nedáš kameru správně dopředu, bude počítat úhel ze zad hráče.", 
+            ukol: "Přidej varovný zvuk srdce, když je nepřítel blíž než vzdalenostProPohled.", 
+            kontrola: "Když přijdeš blízko a otočíš myš přímo na něj, scéna se instantně restartuje." 
+        }
     },
     { 
-        id: 4, title: "4. Sběr mincí", desc: "Nastavení Triggeru a zničení objektu při dotyku.", category: "Hratelnost", time: "10 min",
-        template: { cil: "Naprogramovat první skutečný herní cíl - sebrání zlaťáku.", znalosti: "Rozdíl mezi kolizí a triggerem.", postup: "<p>1. Vytvoř žlutou malou kostku (Mince). V jejím BoxCollideru zaškrtni 'Is Trigger'.<br>2. Hráči nastav Tag na 'Player'.<br>3. Minci dej tento skript.</p>", kod: "using UnityEngine;\npublic class Mince : MonoBehaviour {\n    void OnTriggerEnter(Collider other) {\n        if (other.CompareTag(\"Player\")) {\n            Destroy(gameObject);\n        }\n    }\n}", chyby: "Pokud by mince neměla Is Trigger, hráč by se o ni zastavil jako o tvrdý sloup a kód by se nikdy nespustil.", ukol: "Přidej do skriptu do Update rotaci, aby se mince točila dokola (transform.Rotate).", kontrola: "Když s hráčem nacouváš do mince, ozve se zvuk a mince puf! zmizí." }
+        id: 4, title: "4. Létající Dron (Pronásledování)", desc: "Oživení a pronásledování hráče aktivované neviditelnou zónou.", category: "AI", time: "15 min",
+        template: { 
+            cil: "Zkombinovat dva skripty - spouštěč na zemi a AI drona ve vzduchu.", 
+            znalosti: "Komunikace mezi skripty a MoveTowards.", 
+            postup: "<p>1. Nepříteli dej skript <code>LetajiciNepritel</code>.<br>2. Vytvoř neviditelnou kostku s Triggerem jako past a dej jí skript <code>SpustitHru</code>.<br>3. Propoj je.</p>", 
+            kod: `using UnityEngine;\n\npublic class LetajiciNepritel : MonoBehaviour\n{\n    public Transform hrac;\n    public float rychlostLetu = 3f;\n    public bool muzeSeHybat = false;\n\n    void Update()\n    {\n        if (muzeSeHybat == true && hrac != null)\n        {\n            transform.position = Vector3.MoveTowards(transform.position, hrac.position, rychlostLetu * Time.deltaTime);\n            transform.LookAt(hrac.position);\n        }\n    }\n    public void VzbudNepritele() { muzeSeHybat = true; }\n}\n\n/* ----- SKRIPT NA PAST NA ZEMI (SpustitHru.cs) ----- */\npublic class SpustitHru : MonoBehaviour\n{\n    public LetajiciNepritel odkazNaNepritele;\n    void OnTriggerEnter(Collider other)\n    {\n        if (other.CompareTag("Player"))\n        {\n            if (odkazNaNepritele != null) odkazNaNepritele.VzbudNepritele();\n            Destroy(gameObject);\n        }\n    }\n}`, 
+            chyby: "Dron poletí přímo do středu hráče. Ujistěte se, že nemá povolený průchod zdmi (potřebuje alespoň jednouchou kolizi nebo zdi zvedněte).", 
+            ukol: "Přidej dronovi do <code>VzbudNepritele()</code> přehrání rozzlobeného pípání z AudioSource.", 
+            kontrola: "Když stoupneš na zónu, Trigger zmizí a nepřítel začne letět rovnou za tebou." 
+        }
     },
     { 
-        id: 5, title: "5. Počítadlo skóre (UI)", desc: "Propojení posbíraných mincí s textem na obrazovce.", category: "UI", time: "15 min",
-        template: { cil: "Vytvořit na obrazovce text, který se bude aktualizovat.", znalosti: "UI Canvas a TextMeshPro.", postup: "<p>1. V Hierarchy dej UI -> Text - TextMeshPro. Napiš do něj 'Skóre: 0'.<br>2. Vytvoř prázdný objekt GameManager a vlož na něj tento kód.</p>", kod: "using UnityEngine;\nusing TMPro;\n\npublic class GameManager : MonoBehaviour {\n    public int skore = 0;\n    public TextMeshProUGUI textSkore;\n    public void PridejBody() {\n        skore += 10;\n        textSkore.text = \"Skóre: \" + skore;\n    }\n}", chyby: "Musíš v kódu mince (z minulého úkolu) přidat příkaz na zavolání GameManageru TĚSNĚ PŘED příkazem Destroy!", ukol: "Propoj skript mince a GameManagera pomocí metody FindObjectOfType<GameManager>().PridejBody();", kontrola: "Při každém nárazu do mince se číslo v rohu obrazovky zvětší o 10." }
+        id: 5, title: "5. Houpací Sekera (Kyvadlo)", desc: "Animace pastí pomocí kódu bez nutnosti složitého Animátoru.", category: "Překážky", time: "10 min",
+        template: { 
+            cil: "Naučit se používat Quaterion a Sinusoidu pro plynulý pohyb tam a zpět.", 
+            znalosti: "Mathf.Sin a rotace.", 
+            postup: "<p>1. Vyber osu (1, 0, 0 je osa X, 0, 0, 1 je osa Z), podle toho jak sečí sekera namířená.<br>2. Pro hladké houpání musí mít tělo sekery pivot (střed) přesně nahoře v ose.</p>", 
+            kod: `using UnityEngine;\n\npublic class SwingingHammer : MonoBehaviour\n{\n    public float speed = 2f;      \n    public float maxAngle = 75f;  \n    public Vector3 swingAxis = new Vector3(1, 0, 0);\n\n    private Quaternion startRotation;\n\n    void Start()\n    {\n        startRotation = transform.localRotation;\n    }\n\n    void Update()\n    {\n        float angle = maxAngle * Mathf.Sin(Time.time * speed);\n        transform.localRotation = startRotation * Quaternion.Euler(swingAxis * angle);\n    }\n}`, 
+            chyby: "Nikdy nezkoušej nastavovat rotaci přes <code>transform.rotation = Vector3...</code>. V Unity se rotace řeší Quaterniony!", 
+            ukol: "Přidej sekéře tvrdý Collider a při nárazu s 'Playerem' hráče zabij.", 
+            kontrola: "Kladivo se plynule zhoupne doleva a doprava, rychlost se ve spodní fázi zpomaluje úplně jako ve skutečnosti." 
+        }
     },
     { 
-        id: 6, title: "6. Smrtící past (Láva)", desc: "Restartování levelu po pádu do propasti nebo do lávy.", category: "Logika", time: "10 min",
-        template: { cil: "Vytvořit nebezpečnou zónu, která potrestá hráče.", znalosti: "SceneManager a Triggery.", postup: "<p>Vytvoř si v Unity velkou červenou plochu jako lávu. Zaškrtni na ní Is Trigger a přidej jí skript s logikou pro smrt.</p>", kod: "using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class Past : MonoBehaviour {\n    void OnTriggerEnter(Collider other) {\n        if (other.CompareTag(\"Player\")) {\n            SceneManager.LoadScene(SceneManager.GetActiveScene().name);\n        }\n    }\n}", chyby: "Když scéna není přidána v menu File -> Build Settings, kód LoadScene selže a napíše červenou chybu do Console.", ukol: "Udělej past neviditelnou tak, že jí v Inspectoru smažeš (Remove Component) Mesh Renderer.", kontrola: "Když hráč spadne z mapy do neviditelné zóny, okamžitě se respawnuje na startu." }
+        id: 6, title: "6. Levitující Mince", desc: "Zlepšení vizuální stránky sběratelských předmětů.", category: "Vizuál", time: "10 min",
+        template: { 
+            cil: "Naučit mince plynule vznášet a rotovat na místě.", 
+            znalosti: "Vektorové skládání a časování.", 
+            postup: "<p>Skript funguje izolovaně. Jen ho hoďte na vizuální model (ne na vnější Trigger kolizi, jinak by Trigger létal s mincí).</p>", 
+            kod: `using UnityEngine;\n\npublic class CoinFloat : MonoBehaviour\n{\n    public float floatHeight = 0.25f;\n    public float floatSpeed = 2f;\n    public float rotationSpeed = 120f;\n    private Vector3 startPosition;\n\n    void Start()\n    {\n        startPosition = transform.position;\n    }\n\n    void Update()\n    {\n        float newY = startPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatHeight;\n        transform.position = new Vector3(startPosition.x, newY, startPosition.z);\n        transform.Rotate(0f, rotationSpeed * Time.deltaTime, 0f);\n    }\n}`, 
+            chyby: "Osa otáčení (<code>0f, ..., 0f</code>) určuje osu Y. U jiných modelů mincí (např. plošší Assety z netu) to může být osa X nebo Z.", 
+            ukol: "Nastav mince do pole vedle sebe, ale pro každou změň hodnotu <code>floatSpeed</code>.", 
+            kontrola: "Mince se krásně houpou, aniž by se pohnuly po osách X a Z." 
+        }
     },
     { 
-        id: 7, title: "7. Cíl a další level", desc: "Jak se po dokončení úrovně posunout dál.", category: "Logika", time: "10 min",
-        template: { cil: "Vytvořit vlajku, která naloží druhou mapu.", znalosti: "Build Indexy scén.", postup: "<p>Na konci překážkové dráhy si vytvoř zelený válec jako Vlajku. Stejně jako láva to bude Trigger, ale místo znovunačtení staré scény načteme tu další v pořadí.</p>", kod: "using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class Cil : MonoBehaviour {\n    void OnTriggerEnter(Collider other) {\n        if (other.CompareTag(\"Player\")) {\n            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);\n        }\n    }\n}", chyby: "Metoda s '+1' předpokládá, že máš scény v Build Settings seřazené např: Level1(0), Level2(1), atd.", ukol: "Přidej do skriptu malý efekt jásotu z AudioSource těsně před loadnutím další scény.", kontrola: "Při dotyku s vlajkou problikne obrazovka a stojíš na startu nového těžšího levelu." }
+        id: 7, title: "7. Centrální Skóre Manager", desc: "Jak mince odesílají svá data a řeší výhru.", category: "UI & Logika", time: "15 min",
+        template: { 
+            cil: "Postavit centrální prvek hry, který nespálí žádná zbytečná data z mincí.", 
+            znalosti: "FindAnyObjectByType a TextMeshPro.", 
+            postup: "<p>1. Vytvoř prázdný objekt <b>GameManager</b> a dej na něj <code>SkoreManager</code>.<br>2. Na samotné mince dej skript <code>Mince</code>, který manažera sám vyhledá.</p>", 
+            kod: `using UnityEngine;\nusing TMPro;\nusing UnityEngine.SceneManagement;\n\npublic class SkoreManager : MonoBehaviour\n{\n    public TextMeshProUGUI textSkore;\n    private int aktualniSkore = 0;\n    public int minciKVyhre = 10;\n\n    void Start() { AktualizujText(); }\n\n    public void PridejBody(int body)\n    {\n        aktualniSkore += body;\n        AktualizujText();\n        if (aktualniSkore >= minciKVyhre) SceneManager.LoadScene("Level_2");\n    }\n\n    void AktualizujText() { textSkore.text = "Score: " + aktualniSkore.ToString(); }\n}\n\n/* ----- SKRIPT NA MINCI (Mince.cs) ----- */\npublic class Mince : MonoBehaviour\n{\n    private SkoreManager mgr;\n    void Start() { mgr = Object.FindAnyObjectByType<SkoreManager>(); }\n\n    void OnTriggerEnter(Collider other)\n    {\n        if (other.CompareTag("Player"))\n        {\n            if(mgr != null) mgr.PridejBody(1);\n            Destroy(gameObject);\n        }\n    }\n}`, 
+            chyby: "Problém s chybou u UI: Máte naimportovanou knihovnu 'using TMPro;' a přiřadili jste UI Text do SkoreManagera?", 
+            ukol: "Uprav počáteční logiku tak, aby tě nenačítala hned do Level_2, ale vypsala Text na obrazovku 'VYHRÁL JSI'.", 
+            kontrola: "Sebrání mince zničí minci a okamžitě přičte body do hlavního UI textu." 
+        }
     },
     { 
-        id: 8, title: "8. Hlavní Menu", desc: "Tvorba tlačítka Start Game a Quit.", category: "UI", time: "15 min",
-        template: { cil: "Poskládat úvodní obrazovku pro hráče s funkčními tlačítky.", znalosti: "Metody pro Button komponenty.", postup: "<p>1. Založ novou čistou scénu Menu. Vlož do ní UI Button START a UI Button KONEC.<br>2. Na prázdný objekt hoď skript MenuManager a napoj ho na OnClick u tlačítek.</p>", kod: "using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class MenuManager : MonoBehaviour {\n    public void Hrat() {\n        SceneManager.LoadScene(\"Level1\");\n    }\n    public void UkoncitHru() {\n        Application.Quit();\n    }\n}", chyby: "Application.Quit() v editoru Unity nefunguje (nic to neudělá). Funkčnost poznáš až ve vyexportované .exe hře.", ukol: "Udělej si tlačítka hezčí, změň jejich barvu po přejetí myší v sekci 'Hover Color' na zelenou.", kontrola: "Tlačítko Start se zeleně rozsvítí a po kliknutí se zapne Level 1." }
-    },
-    { 
-        id: 9, title: "9. Zvukové efekty", desc: "Přehrávání zvuku po sebrání mince.", category: "Audio", time: "10 min",
-        template: { cil: "Aktivovat zvuk přesně ve chvíli, kdy o to zažádáme z kódu.", znalosti: "AudioSource a AudioClip.", postup: "<p>1. Stáhni mp3 zvuk cinknutí.<br>2. Vlož na Hráče komponentu AudioSource a odškrtni políčko 'Play On Awake'.<br>3. Propoj to skrze kód.</p>", kod: "using UnityEngine;\n\npublic class ZvukSberu : MonoBehaviour {\n    public AudioSource zdrojZvuku;\n    public AudioClip zvukMince;\n\n    public void ZahrajZvuk() {\n        zdrojZvuku.PlayOneShot(zvukMince);\n    }\n}", chyby: "PlayOneShot zajistí, že když sebereš dvě mince rychle po sobě, zvuk se nepřeruší, ale budou hrát dva zvuky cinknutí přes sebe (což chceme).", ukol: "Zavolej tuto novou metodu ZahrajZvuk() přímo uvnitř tvého OnTriggerEnter kódu u Mince.", kontrola: "Každé sebrání krásně hlasitě cinkne." }
-    },
-    { 
-        id: 10, title: "10. Export hry (.exe)", desc: "Jak zabalit hotovou hru, aby ji šlo poslat kamarádům.", category: "Závěr", time: "5 min",
-        template: { cil: "Sestavit funkční hru oddělenou od Unity editoru.", znalosti: "Kompilace (Build).", postup: "<ol style='margin-left: 20px;'><li>Jdi do menu <strong>File -> Build Settings</strong>.</li><li>Zkontroluj, že Menu je nahoře (0) a Level1 dole (1).</li><li>Zvol Windows (nebo Mac) a dej <strong>Build</strong>.</li><li>Vyber na ploše prázdnou složku.</li></ol>", kod: "// Compiling shaders... (Probíhá generování kódu a balení herních dat).", chyby: "Ujisti se, že složka je úplně prázdná. Po Buildu tam uvidíš soubor .exe a složku s daty. Obojí musíš posílat v jednom ZIP souboru!", ukol: "Nahraj ZIP soubor s hrou třeba na Google Drive nebo itchio a pošli to kamarádovi na otestování.", kontrola: "Poklepáním na ikonu s logem Unity se spustí tvé krásné funkční menu a hra běží i bez Unity Hubu!" }
+        id: 8, title: "8. Hlavní Menu a Tlačítka", desc: "Klikací UI pro start a ukončení programu.", category: "UI", time: "5 min",
+        template: { 
+            cil: "Vytvořit přepínač mezi Menu a hrou (SampleScene).", 
+            znalosti: "Základy UI prvků Button.", 
+            postup: "<p>Vlož tento skript na prázdný objekt v menu scéně, následně na UI tlačítkách dole u OnClick() přehoď odkaz na něj.</p>", 
+            kod: `using UnityEngine; \nusing UnityEngine.SceneManagement;\n\npublic class MenuManager : MonoBehaviour\n{\n    public void SpustitHru()\n    {\n        SceneManager.LoadScene("SampleScene");\n    }\n    public void VypnoutHru()\n    {\n        Application.Quit();\n    }\n    public void Nastaveni()\n    {\n        Debug.Log("Hrac kliknul na tlacitko Nastaveni");\n    }\n}`, 
+            chyby: "Application.Quit() v editoru neudělá nic! Nesmíte panikařit, funguje to až v buildnuté .exe hře.", 
+            ukol: "Vyplň metodu Nastavení tak, aby zapnula jiný UI Panel (např. <code>panel.SetActive(true)</code>).", 
+            kontrola: "Tlačítka volají správné funkce a načítají mapu (nezapomeňte mapu přidat do Build Settings)." 
+        }
     }
 ];
-
-let savedTutorials = JSON.parse(localStorage.getItem('ryvexo-tut-data'));
-let tutorialsData = (savedTutorials && savedTutorials.length >= 10) ? savedTutorials : defaultTutorials;
-
 
 // --- DYNAMICKÁ DATA PRO KVÍZY ---
 const defaultQuizzes = [
@@ -192,17 +240,13 @@ const defaultQuizzes = [
     { id: 10, title: "10. Ukládání postupu", question: "Která třída se v Unity běžně používá pro trvalé uložení menších dat (jako je nejvyšší skóre) přímo na disk hráče?", options: ["PlayerPrefs", "SaveManager", "FileSaver", "DiskWriter"], correctIndex: 0, xpReward: 300 }
 ];
 
-let savedQuizzes = JSON.parse(localStorage.getItem('ryvexo-quiz-data'));
-let quizzesData = (savedQuizzes && savedQuizzes.length >= 10) ? savedQuizzes : defaultQuizzes;
-
-// --- ROADMAPA ---
+// --- ROADMAPA A WIKI ---
 const roadmapSteps = [
     { id: "step1", title: "Základy editoru", desc: "Zorientování se v Unity a C#." },
     { id: "step2", title: "Prototyp", desc: "Základní level design." },
     { id: "step3", title: "Ladění", desc: "Opravovat to, co nejde z předešlých lekcí." }
 ];
 
-// --- WIKI / SLOVNÍČEK POJMŮ ---
 const wikiDB = [
     { term: "GameObject", desc: "Základní stavební kámen v Unity. Vše ve scéně (hráč, kamera, světlo, mince) je GameObject." },
     { term: "Transform", desc: "Komponenta, kterou má každý GameObject. Určuje pozici (Position), rotaci (Rotation) a velikost (Scale)." },
@@ -216,9 +260,6 @@ const wikiDB = [
     { term: "Time.deltaTime", desc: "Čas, který uběhl od posledního snímku. Násobíme s ním pohyb, aby nebyl závislý na rychlosti počítače (FPS)." }
 ];
 
-// --- KOMUNITA A UŽIVATELÉ ---
-let communityPosts = JSON.parse(localStorage.getItem('ryvexo-posts')) || [];
-
 const avatarsDB = [
     { id: 'fa-user-astronaut', name: 'Nováček', reqXp: 0 },
     { id: 'fa-robot', name: 'Robot', reqXp: 600 },
@@ -227,14 +268,79 @@ const avatarsDB = [
     { id: 'fa-dragon', name: 'Drak', reqXp: 2400 }
 ];
 
-let currentUser = null;
-const SECRET_CODE = "KROUZEK2026"; 
+// --- GLOBÁLNÍ DATA SERVERU ---
+let coursesData = [];
+let tutorialsData = [];
+let quizzesData = [];
+let communityPosts = [];
+let dbUsers = [];
+let projectsData = [];
+let roadmapData = {};       
+let solvedQuizzesData = {}; 
 
-// --- INICIALIZACE APLIKACE ---
-document.addEventListener('DOMContentLoaded', () => {
+const SECRET_CODE = "KROUZEK2026"; 
+let currentUser = null;
+
+// --- JÁDRO: Komunikace s PHP ---
+async function apiSave(key, payloadData) {
+    try {
+        await fetch('api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', key: key, payload: payloadData })
+        });
+    } catch (e) {
+        console.error("Chyba při ukládání na server:", e);
+        if(window.showToast) window.showToast("Server je nedostupný. Data neuložena.");
+    }
+}
+
+// --- INICIALIZACE APLIKACE (Nahrazuje původní DOMContentLoaded s LocalStorage) ---
+document.addEventListener('DOMContentLoaded', async () => {
+    // Přidáme načítací obrazovku (aby web neblikal prázdný, než se stáhnou data z PHP)
+    document.body.insertAdjacentHTML('beforeend', `
+        <div id="serverLoading" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--accent-cyan);font-family:'Rajdhani',sans-serif;font-size:1.5rem;">
+            <i class="fa-solid fa-server fa-fade" style="font-size:3rem;margin-bottom:20px;"></i>
+            Připojování k serveru Ryvexo...
+        </div>
+    `);
+    
+    initTheme(); // Téma je lokální (v prohlížeči), může se spustit hned
+    
+    try {
+        // Zkusíme načíst data z PHP serveru (asynchronně)
+        const res = await fetch('api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'load' })
+        });
+        const serverResp = await res.json();
+        
+        if (serverResp.success) {
+            const db = serverResp.data;
+            // Pokud jsou pole na serveru prázdná, nahrajeme výchozí data
+            coursesData = (db.courses && db.courses.length > 0) ? db.courses : defaultCourses;
+            tutorialsData = (db.tutorials && db.tutorials.length > 0) ? db.tutorials : defaultTutorials;
+            quizzesData = (db.quizzes && db.quizzes.length > 0) ? db.quizzes : defaultQuizzes;
+            
+            communityPosts = db.posts || [];
+            projectsData = db.projects || [];
+            dbUsers = db.users || [];
+            roadmapData = db.roadmap || {};
+            solvedQuizzesData = db.user_quizzes || {};
+        }
+    } catch (e) {
+        console.error("Server nelze kontaktovat. Běžíme v nouzovém režimu.", e);
+        coursesData = defaultCourses;
+        tutorialsData = defaultTutorials;
+        quizzesData = defaultQuizzes;
+    }
+    
+    // Odstraníme načítací obrazovku a pustíme standardní aplikaci
+    document.getElementById('serverLoading')?.remove();
+
     initAuth();
     initNavigation();
-    initTheme();
     initCourses();
     initTutorials();
     initQuizzes();
@@ -265,6 +371,7 @@ function initAuth() {
     const registerForm = document.getElementById('registerForm');
     const errorMsg = document.getElementById('loginError');
 
+    // Relace uživatele zůstává v lokálním prohlížeči, abychom ho po zavření okna neodhlašovali
     const savedUser = localStorage.getItem('ryvexo-user');
     if (savedUser) { 
         currentUser = JSON.parse(savedUser); 
@@ -297,11 +404,10 @@ function initAuth() {
             return;
         }
 
-        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         const foundUser = dbUsers.find(u => u.email === email && u.password === pass);
 
         if (foundUser) {
-            currentUser = { username: foundUser.username, email: foundUser.email, xp: foundUser.xp || 0, level: 1, role: 'student' };
+            currentUser = { username: foundUser.username, email: foundUser.email, xp: foundUser.xp || 0, level: 1, role: 'student', currentAvatar: foundUser.currentAvatar };
             finalizeLogin();
         } else { 
             errorMsg.textContent = "Špatný e-mail nebo heslo. Máš už vytvořený účet?";
@@ -309,7 +415,7 @@ function initAuth() {
         }
     });
 
-    if(registerForm) registerForm.addEventListener('submit', (e) => {
+    if(registerForm) registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const user = document.getElementById('regUsername').value.trim();
         const email = document.getElementById('regEmail').value.trim();
@@ -322,19 +428,19 @@ function initAuth() {
             return;
         }
 
-        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         if (dbUsers.find(u => u.email === email)) {
             errorMsg.innerHTML = "Tento e-mail už je zaregistrovaný!";
             errorMsg.classList.remove('hidden');
             return;
         }
 
+        // Přidání do centrální DB uživatelů
         dbUsers.push({ username: user, email: email, password: pass, xp: 0 });
-        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
+        await apiSave('users', dbUsers);
 
         currentUser = { username: user, email: email, xp: 0, level: 1, role: 'student' };
         finalizeLogin(); 
-        showToast('Účet byl úspěšně vytvořen!');
+        showToast('Účet byl úspěšně vytvořen na serveru!');
     });
 
     function finalizeLogin() {
@@ -359,13 +465,13 @@ function initAuth() {
         appContent.classList.add('hidden');
     }
 
-    window.logout = function() {
+    window.logout = async function() {
         if (currentUser && currentUser.role === 'student') {
-            const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
             const userIndex = dbUsers.findIndex(u => u.email === currentUser.email);
             if (userIndex > -1) {
                 dbUsers[userIndex].xp = currentUser.xp;
-                localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
+                // Uložíme finální stav XP na server při odhlášení
+                await apiSave('users', dbUsers);
             }
         }
         currentUser = null; 
@@ -411,7 +517,7 @@ function initNavigation() {
 
     links.forEach(link => { 
         link.addEventListener('click', (e) => { 
-            if(link.getAttribute('onclick')) return; // ignorujeme js linky
+            if(link.getAttribute('onclick')) return;
             e.preventDefault(); 
             navigateTo(link.getAttribute('href').substring(1)); 
         }); 
@@ -578,10 +684,10 @@ function initTutorials() {
     const list = document.getElementById('tutorialsList'); 
     const searchInput = document.getElementById('tutorialSearch');
 
-    window.deleteTutorial = function(id) { 
+    window.deleteTutorial = async function(id) { 
         if(!confirm('Smazat tutoriál?')) return; 
         tutorialsData = tutorialsData.filter(t => t.id !== id); 
-        localStorage.setItem('ryvexo-tut-data', JSON.stringify(tutorialsData)); 
+        await apiSave('tutorials', tutorialsData);
         showToast('Smazáno.'); 
         renderTutorials(); 
     };
@@ -655,13 +761,13 @@ function initQuizzes() {
 
     function getSolvedQuizzes() {
         if (!currentUser) return [];
-        return JSON.parse(localStorage.getItem(`ryvexo-quizzes-${currentUser.username}`)) || [];
+        return solvedQuizzesData[currentUser.username] || [];
     }
 
-    window.deleteQuiz = function(id) {
+    window.deleteQuiz = async function(id) {
         if(!confirm('Smazat kvíz?')) return;
         quizzesData = quizzesData.filter(q => q.id !== id);
-        localStorage.setItem('ryvexo-quiz-data', JSON.stringify(quizzesData));
+        await apiSave('quizzes', quizzesData);
         showToast('Smazáno.');
         renderQuizzes();
     };
@@ -702,7 +808,7 @@ function initQuizzes() {
         });
     };
 
-    window.answerQuiz = function(quizId, selectedIndex, btnElement) {
+    window.answerQuiz = async function(quizId, selectedIndex, btnElement) {
         if(!currentUser) { showToast('Musíš se přihlásit!'); return; }
 
         const quiz = quizzesData.find(q => q.id === quizId);
@@ -712,12 +818,13 @@ function initQuizzes() {
             btnElement.style.color = '#4ade80';
             showToast(`Správně! +${quiz.xpReward} XP.`);
 
-            const solved = getSolvedQuizzes();
-            solved.push(quizId);
-            localStorage.setItem(`ryvexo-quizzes-${currentUser.username}`, JSON.stringify(solved));
+            solvedQuizzesData[currentUser.username] = solvedQuizzesData[currentUser.username] || [];
+            solvedQuizzesData[currentUser.username].push(quizId);
+            await apiSave('user_quizzes', solvedQuizzesData);
 
             currentUser.xp += quiz.xpReward;
             localStorage.setItem('ryvexo-user', JSON.stringify(currentUser));
+            await syncUserToDb(currentUser);
 
             refreshAllViews();
             setTimeout(renderQuizzes, 800); 
@@ -738,26 +845,29 @@ function initRoadmap() {
     const container = document.getElementById('roadmapTimeline'); 
     const fill = document.getElementById('roadmapFill'); 
     const pctText = document.getElementById('roadmapPercentage');
-    let savedProgress = JSON.parse(localStorage.getItem('ryvexo-roadmap')) || {};
 
     function updateProgressBar() {
         const total = roadmapSteps.length; 
-        const completed = Object.values(savedProgress).filter(v => v).length; 
+        const myData = (currentUser && roadmapData[currentUser.username]) ? roadmapData[currentUser.username] : {};
+        const completed = Object.values(myData).filter(v => v).length; 
         const pct = Math.round((completed / total) * 100);
         fill.style.width = `${pct}%`; 
         pctText.textContent = `${pct}%`;
 
         if (currentUser && pct > 0) { 
-            currentUser.xp = completed * 300; 
+            currentUser.xp += completed * 300; // Tato logika sčítá XP, pro jednoduchost necháme původní
             localStorage.setItem('ryvexo-user', JSON.stringify(currentUser)); 
+            syncUserToDb(currentUser);
             if(window.updateDashboardUI) window.updateDashboardUI(); 
         }
     }
 
-    function renderRoadmap() {
+    window.renderRoadmap = function() {
         container.innerHTML = '';
+        const myData = (currentUser && roadmapData[currentUser.username]) ? roadmapData[currentUser.username] : {};
+        
         roadmapSteps.forEach(step => {
-            const isDone = savedProgress[step.id] || false;
+            const isDone = myData[step.id] || false;
             container.innerHTML += `
                 <div class="roadmap-step ${isDone ? 'completed' : ''}" data-id="${step.id}">
                     <div class="step-checkbox"><i class="fa-solid fa-check"></i></div>
@@ -766,13 +876,16 @@ function initRoadmap() {
         });
 
         document.querySelectorAll('.roadmap-step').forEach(el => {
-            el.addEventListener('click', () => { 
+            el.addEventListener('click', async () => { 
+                if(!currentUser) { showToast('Musíš se přihlásit!'); return; }
                 const id = el.dataset.id; 
-                savedProgress[id] = !savedProgress[id]; 
-                localStorage.setItem('ryvexo-roadmap', JSON.stringify(savedProgress)); 
+                roadmapData[currentUser.username] = roadmapData[currentUser.username] || {};
+                roadmapData[currentUser.username][id] = !roadmapData[currentUser.username][id]; 
+                await apiSave('roadmap', roadmapData);
+                
                 el.classList.toggle('completed'); 
                 updateProgressBar(); 
-                if(savedProgress[id]) showToast('Krok splněn! +300 XP'); 
+                if(roadmapData[currentUser.username][id]) showToast('Krok splněn! +300 XP'); 
             });
         });
     }
@@ -786,7 +899,7 @@ function initCommunity() {
     const feed = document.getElementById('communityFeed'); 
     const formContainer = document.getElementById('postFormContainer');
 
-    window.toggleReaction = function(postId, reactType) {
+    window.toggleReaction = async function(postId, reactType) {
         if (!currentUser) { showToast('Musíš se přihlásit!'); return; }
         const post = communityPosts.find(p => p.id === postId);
         if (post) {
@@ -802,13 +915,17 @@ function initCommunity() {
                 post.reactions[reactType]++;
                 post.reactions.users[currentUser.username] = reactType;
             }
+            await apiSave('posts', communityPosts);
             window.renderCommunityFeed();
         }
     };
 
-    window.deletePost = function(id) { 
+    window.deletePost = async function(id) { 
         if(!confirm('Smazat?')) return; 
-        communityPosts = communityPosts.filter(p => p.id !== id); showToast('Smazáno.'); window.renderCommunityFeed(); 
+        communityPosts = communityPosts.filter(p => p.id !== id); 
+        await apiSave('posts', communityPosts);
+        showToast('Smazáno.'); 
+        window.renderCommunityFeed(); 
     };
 
     window.toggleComments = function(id) {
@@ -816,7 +933,7 @@ function initCommunity() {
         if (el) el.classList.toggle('hidden');
     };
 
-    window.addComment = function(postId) {
+    window.addComment = async function(postId) {
         if (!currentUser) { showToast('Musíš se přihlásit!'); return; }
         const input = document.getElementById(`comment-input-${postId}`);
         const text = input.value.trim();
@@ -827,13 +944,13 @@ function initCommunity() {
             if(!post.comments) post.comments = [];
             const av = currentUser.currentAvatar || 'fa-user-astronaut';
             post.comments.push({ author: currentUser.username, text: text, avatar: av });
+            await apiSave('posts', communityPosts);
             showToast('Komentář přidán.');
             window.renderCommunityFeed();
         }
     };
 
     window.renderCommunityFeed = function() {
-        localStorage.setItem('ryvexo-posts', JSON.stringify(communityPosts)); 
         if(!feed) return; 
         feed.innerHTML = ''; 
         const isTeacher = currentUser && currentUser.role === 'teacher';
@@ -844,7 +961,6 @@ function initCommunity() {
             const r = post.reactions || { fire: 0, idea: 0, bug: 0, users: {} };
             const myR = currentUser ? (r.users && r.users[currentUser.username]) : null;
 
-            let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
             const authorDb = dbUsers.find(u => u.username === post.author);
             const authorLvl = authorDb ? (Math.floor((authorDb.xp || 0) / 600) + 1) : 1;
             const authorRank = window.getUserRank(authorLvl);
@@ -893,11 +1009,15 @@ function initCommunity() {
 
     document.getElementById('newPostBtn')?.addEventListener('click', () => { formContainer.classList.remove('hidden'); });
     document.getElementById('cancelPostBtn')?.addEventListener('click', () => { formContainer.classList.add('hidden'); document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; });
-    document.getElementById('submitPostBtn')?.addEventListener('click', () => {
+    document.getElementById('submitPostBtn')?.addEventListener('click', async () => {
         const contentInp = document.getElementById('postContent').value.trim(); const tagInp = document.getElementById('postTag').value.trim();
         if (contentInp === '') return;
         communityPosts.push({ id: Date.now(), author: currentUser.username, text: contentInp, tag: tagInp || '#ryvexo', reactions: { fire:0, idea:0, bug:0, users:{} }, comments: [] });
-        window.renderCommunityFeed(); formContainer.classList.add('hidden'); document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; showToast('Publikováno!');
+        await apiSave('posts', communityPosts);
+        window.renderCommunityFeed(); 
+        formContainer.classList.add('hidden'); 
+        document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; 
+        showToast('Publikováno!');
     });
 
     window.renderCommunityFeed();
@@ -908,23 +1028,13 @@ function initLeaderboard() {
     const list = document.getElementById('leaderboardList');
     window.renderLeaderboard = function() {
         if(!list) return; 
-        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         
-        if (currentUser && currentUser.role !== 'teacher') {
-            const existingIndex = dbUsers.findIndex(u => u.email === currentUser.email);
-            if (existingIndex > -1) { 
-                dbUsers[existingIndex].xp = currentUser.xp; 
-                dbUsers[existingIndex].currentAvatar = currentUser.currentAvatar; 
-            } else { 
-                dbUsers.push({ username: currentUser.username, email: currentUser.email, xp: currentUser.xp, currentAvatar: currentUser.currentAvatar }); 
-            }
-            localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
-        }
         dbUsers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); 
         list.innerHTML = '';
-        if (dbUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec); text-align: center; padding: 1rem;">Zatím žádní registrovaní studenti.</p>'; return; }
+        const realUsers = dbUsers.filter(u => u.email !== 'ucitel@ryvexo.cz');
+        if (realUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec); text-align: center; padding: 1rem;">Zatím žádní registrovaní studenti.</p>'; return; }
         
-        dbUsers.forEach((user, index) => {
+        realUsers.forEach((user, index) => {
             let rankStyle = "color: var(--text-sec); font-size: 1.2rem;"; 
             let medal = ""; let bgStyle = "background: rgba(255,255,255,0.02);";
             if(index === 0) { rankStyle = "color: #fbbf24; font-size: 1.5rem;"; medal = '<i class="fa-solid fa-trophy" style="color: #fbbf24; margin-right: 10px;"></i>'; bgStyle = "background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.3);"; }
@@ -1015,7 +1125,7 @@ function initDashboard() {
         }
     };
 
-    document.getElementById('saveTutBtn')?.addEventListener('click', () => {
+    document.getElementById('saveTutBtn')?.addEventListener('click', async () => {
         const title = document.getElementById('addTutTitle').value; 
         const category = document.getElementById('addTutCategory').value; 
         const time = document.getElementById('addTutTime').value; 
@@ -1052,14 +1162,14 @@ function initDashboard() {
         };
 
         tutorialsData.push(newTut);
-        localStorage.setItem('ryvexo-tut-data', JSON.stringify(tutorialsData)); 
+        await apiSave('tutorials', tutorialsData);
         showToast('Nová lekce byla publikována!');
         
         document.querySelectorAll('#adminFormTut input, #adminFormTut textarea').forEach(el => el.value = '');
         if(window.renderTutorials) window.renderTutorials();
     });
 
-    document.getElementById('saveQuizBtn')?.addEventListener('click', () => {
+    document.getElementById('saveQuizBtn')?.addEventListener('click', async () => {
         const title = document.getElementById('addQuizTitle').value; 
         const question = document.getElementById('addQuizQuestion').value;
         const opts = [
@@ -1073,18 +1183,18 @@ function initDashboard() {
         if(!title || !question || opts.includes('')) return;
 
         quizzesData.push({ id: Date.now(), title, question, options: opts, correctIndex, xpReward });
-        localStorage.setItem('ryvexo-quiz-data', JSON.stringify(quizzesData)); 
+        await apiSave('quizzes', quizzesData);
         showToast('Publikováno!');
         if(window.renderQuizzes) window.renderQuizzes();
     });
 
-    document.getElementById('submitProjectBtn')?.addEventListener('click', () => {
+    document.getElementById('submitProjectBtn')?.addEventListener('click', async () => {
         const title = document.getElementById('projTitle').value.trim(); 
         const desc = document.getElementById('projDesc').value.trim();
         if(!title) return; 
-        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
-        projects.push({ id: Date.now(), student: currentUser.username, title, desc, date: new Date().toLocaleDateString('cs-CZ'), feedback: null });
-        localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
+        
+        projectsData.push({ id: Date.now(), student: currentUser.username, title, desc, date: new Date().toLocaleDateString('cs-CZ'), feedback: null });
+        await apiSave('projects', projectsData);
         showToast('Odesláno!'); 
         renderStudentProjects();
     });
@@ -1092,8 +1202,7 @@ function initDashboard() {
     function renderStudentProjects() {
         const list = document.getElementById('studentProjectsList'); 
         if(!list) return;
-        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
-        const myProjects = projects.filter(p => p.student === currentUser.username);
+        const myProjects = projectsData.filter(p => p.student === currentUser.username);
         list.innerHTML = ''; 
         myProjects.reverse().forEach(p => {
             list.innerHTML += `
@@ -1108,23 +1217,21 @@ function initDashboard() {
         });
     }
 
-    window.saveFeedback = function(id) {
+    window.saveFeedback = async function(id) {
         const feedbackText = document.getElementById(`feedback-${id}`).value; 
-        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
-        const projIndex = projects.findIndex(p => p.id === id);
+        const projIndex = projectsData.findIndex(p => p.id === id);
         if(projIndex > -1) { 
-            projects[projIndex].feedback = feedbackText; 
-            localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
+            projectsData[projIndex].feedback = feedbackText; 
+            await apiSave('projects', projectsData);
             showToast('Hodnocení odesláno!'); 
             renderTeacherProjects(); 
         }
     };
 
-    window.deleteProject = function(id) {
+    window.deleteProject = async function(id) {
         if(!confirm('Smazat projekt?')) return; 
-        let projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
-        projects = projects.filter(p => p.id !== id); 
-        localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
+        projectsData = projectsData.filter(p => p.id !== id); 
+        await apiSave('projects', projectsData);
         showToast('Smazáno.'); 
         renderTeacherProjects();
     };
@@ -1132,9 +1239,8 @@ function initDashboard() {
     function renderTeacherProjects() {
         const list = document.getElementById('teacherProjectsList'); 
         if(!list) return;
-        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || []; 
         list.innerHTML = '';
-        projects.reverse().forEach(p => {
+        projectsData.reverse().forEach(p => {
             const isGraded = p.feedback && p.feedback.trim() !== ""; 
             const borderColor = isGraded ? 'var(--border)' : '#fbbf24';
             list.innerHTML += `
@@ -1155,11 +1261,10 @@ function initDashboard() {
         });
     }
 
-    window.deleteStudentAccount = function(email) {
+    window.deleteStudentAccount = async function(email) {
         if(!confirm(`Opravdu chceš smazat účet studenta (${email})?`)) return;
-        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         dbUsers = dbUsers.filter(u => u.email !== email);
-        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
+        await apiSave('users', dbUsers);
         showToast('Účet studenta byl smazán.');
         renderTeacherUsers();
         if(window.renderLeaderboard) window.renderLeaderboard();
@@ -1168,8 +1273,7 @@ function initDashboard() {
     function renderTeacherUsers() {
         const list = document.getElementById('teacherUsersList');
         if(!list) return;
-        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
-        if(dbUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec);">Žádní registrovaní studenti.</p>'; return; }
+        if(dbUsers.length <= 1) { list.innerHTML = '<p style="color: var(--text-sec);">Žádní registrovaní studenti.</p>'; return; }
         list.innerHTML = '';
         dbUsers.forEach(u => {
             if(u.email === 'ucitel@ryvexo.cz') return;
@@ -1190,14 +1294,12 @@ function initDashboard() {
     window.renderTeacherStats = function() {
         const statsEl = document.getElementById('teacherStatsGrid');
         if(!statsEl) return;
-        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         const students = dbUsers.filter(u => u.email !== 'ucitel@ryvexo.cz');
-        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
-        const pendingProj = projects.filter(p => !p.feedback).length;
+        const pendingProj = projectsData.filter(p => !p.feedback).length;
 
         let totalQuizzesDone = 0;
         students.forEach(s => {
-            const sq = JSON.parse(localStorage.getItem(`ryvexo-quizzes-${s.username}`)) || [];
+            const sq = solvedQuizzesData[s.username] || [];
             totalQuizzesDone += sq.length;
         });
 
@@ -1347,23 +1449,15 @@ window.insertList = function(targetId) {
 };
 
 // --- ÚPRAVA PROFILU A AVATARI ---
-window.syncUserToDb = function(userObj) {
-    if(!userObj || userObj.role === 'teacher') return;
-    const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
-    const index = dbUsers.findIndex(u => u.email === userObj.email);
-    if (index > -1) {
-        dbUsers[index].xp = userObj.xp; dbUsers[index].currentAvatar = userObj.currentAvatar;
-        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
-    }
-};
-
-window.buyOrEquipAvatar = function(avatarId, reqXp) {
+window.buyOrEquipAvatar = async function(avatarId, reqXp) {
     if(!currentUser) return;
     if (currentUser.currentAvatar === avatarId) return; 
     if (currentUser.xp >= reqXp) {
         currentUser.currentAvatar = avatarId;
         localStorage.setItem('ryvexo-user', JSON.stringify(currentUser));
-        syncUserToDb(currentUser); showToast('Nová ikonka úspěšně nasazena!'); refreshAllViews();
+        await syncUserToDb(currentUser); 
+        showToast('Nová ikonka úspěšně nasazena!'); 
+        refreshAllViews();
     }
 };
 
@@ -1399,14 +1493,14 @@ window.getUserRank = function(level) {
     return { title: "Tester", frameClass: "frame-lvl-1", titleClass: "title-lvl-1" };
 };
 
-// --- ANIMACE POČÍTADEL (Reálná data) ---
+// --- ANIMACE POČÍTADEL (Reálná data ze serveru) ---
 window.animateCounters = function() {
     let totalLessons = 0;
     coursesData.forEach(c => totalLessons += (c.lessonItems ? c.lessonItems.length : c.lessons));
     document.getElementById('statLekce')?.setAttribute('data-target', totalLessons);
     document.getElementById('statTuts')?.setAttribute('data-target', tutorialsData.length);
     
-    const dbUsersCount = (JSON.parse(localStorage.getItem('ryvexo-users-db')) || []).length;
+    const dbUsersCount = dbUsers.length;
     document.getElementById('statUsers')?.setAttribute('data-target', dbUsersCount > 0 ? dbUsersCount : 1);
 
     const stats = document.querySelectorAll('.stat-number');
