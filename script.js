@@ -287,7 +287,7 @@ const SECRET_CODE = "KROUZEK2026";
 
 // --- INICIALIZACE APLIKACE ---
 document.addEventListener('DOMContentLoaded', () => {
-    initAuth();
+    
     initNavigation();
     initTheme();
     initCourses();
@@ -300,6 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initWiki();
     initMisc();
+
+    initAuth();
 });
 
 window.refreshAllViews = function() {
