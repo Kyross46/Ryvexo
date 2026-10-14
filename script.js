@@ -1,8 +1,8 @@
 /**
- * RYVEXO - Frontendová logika (Nyní napojená na centrální API)
+ * RYVEXO - Frontendová logika webové aplikace (GitHub Pages / LocalStorage verze)
  */
 
-// --- DYNAMICKÁ DATA PRO VÝUKU (VÝCHOZÍ) ---
+// --- DYNAMICKÁ DATA PRO VÝUKU ---
 const defaultCourses = [
     { 
         id: 1, title: "Základy C#", category: "programming", desc: "Proměnné, podmínky, cykly a základy programátorské logiky pro Unity.", difficulty: "Začátečník", lessons: 5, icon: "fa-code",
@@ -240,13 +240,24 @@ const defaultQuizzes = [
     { id: 10, title: "10. Ukládání postupu", question: "Která třída se v Unity běžně používá pro trvalé uložení menších dat (jako je nejvyšší skóre) přímo na disk hráče?", options: ["PlayerPrefs", "SaveManager", "FileSaver", "DiskWriter"], correctIndex: 0, xpReward: 300 }
 ];
 
-// --- ROADMAPA A WIKI ---
+let savedQuizzes = JSON.parse(localStorage.getItem('ryvexo-quiz-data'));
+let quizzesData = (savedQuizzes && savedQuizzes.length >= 10) ? savedQuizzes : defaultQuizzes;
+
+// Uložení verze V2 aby se smazaly staré testovací tutoriály
+let savedTutorials = JSON.parse(localStorage.getItem('ryvexo-tut-data-v2'));
+let tutorialsData = (savedTutorials && savedTutorials.length >= 8) ? savedTutorials : defaultTutorials;
+
+let savedCourses = JSON.parse(localStorage.getItem('ryvexo-courses-data'));
+let coursesData = (savedCourses && savedCourses.length >= 14) ? savedCourses : defaultCourses;
+
+// --- ROADMAPA ---
 const roadmapSteps = [
     { id: "step1", title: "Základy editoru", desc: "Zorientování se v Unity a C#." },
     { id: "step2", title: "Prototyp", desc: "Základní level design." },
     { id: "step3", title: "Ladění", desc: "Opravovat to, co nejde z předešlých lekcí." }
 ];
 
+// --- WIKI / SLOVNÍČEK POJMŮ ---
 const wikiDB = [
     { term: "GameObject", desc: "Základní stavební kámen v Unity. Vše ve scéně (hráč, kamera, světlo, mince) je GameObject." },
     { term: "Transform", desc: "Komponenta, kterou má každý GameObject. Určuje pozici (Position), rotaci (Rotation) a velikost (Scale)." },
@@ -260,6 +271,9 @@ const wikiDB = [
     { term: "Time.deltaTime", desc: "Čas, který uběhl od posledního snímku. Násobíme s ním pohyb, aby nebyl závislý na rychlosti počítače (FPS)." }
 ];
 
+// --- KOMUNITA A UŽIVATELÉ ---
+let communityPosts = JSON.parse(localStorage.getItem('ryvexo-posts')) || [];
+
 const avatarsDB = [
     { id: 'fa-user-astronaut', name: 'Nováček', reqXp: 0 },
     { id: 'fa-robot', name: 'Robot', reqXp: 600 },
@@ -268,79 +282,14 @@ const avatarsDB = [
     { id: 'fa-dragon', name: 'Drak', reqXp: 2400 }
 ];
 
-// --- GLOBÁLNÍ DATA SERVERU ---
-let coursesData = [];
-let tutorialsData = [];
-let quizzesData = [];
-let communityPosts = [];
-let dbUsers = [];
-let projectsData = [];
-let roadmapData = {};       
-let solvedQuizzesData = {}; 
-
-const SECRET_CODE = "KROUZEK2026"; 
 let currentUser = null;
+const SECRET_CODE = "KROUZEK2026"; 
 
-// --- JÁDRO: Komunikace s PHP ---
-async function apiSave(key, payloadData) {
-    try {
-        await fetch('api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'save', key: key, payload: payloadData })
-        });
-    } catch (e) {
-        console.error("Chyba při ukládání na server:", e);
-        if(window.showToast) window.showToast("Server je nedostupný. Data neuložena.");
-    }
-}
-
-// --- INICIALIZACE APLIKACE (Nahrazuje původní DOMContentLoaded s LocalStorage) ---
-document.addEventListener('DOMContentLoaded', async () => {
-    // Přidáme načítací obrazovku (aby web neblikal prázdný, než se stáhnou data z PHP)
-    document.body.insertAdjacentHTML('beforeend', `
-        <div id="serverLoading" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--accent-cyan);font-family:'Rajdhani',sans-serif;font-size:1.5rem;">
-            <i class="fa-solid fa-server fa-fade" style="font-size:3rem;margin-bottom:20px;"></i>
-            Připojování k serveru Ryvexo...
-        </div>
-    `);
-    
-    initTheme(); // Téma je lokální (v prohlížeči), může se spustit hned
-    
-    try {
-        // Zkusíme načíst data z PHP serveru (asynchronně)
-        const res = await fetch('api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'load' })
-        });
-        const serverResp = await res.json();
-        
-        if (serverResp.success) {
-            const db = serverResp.data;
-            // Pokud jsou pole na serveru prázdná, nahrajeme výchozí data
-            coursesData = (db.courses && db.courses.length > 0) ? db.courses : defaultCourses;
-            tutorialsData = (db.tutorials && db.tutorials.length > 0) ? db.tutorials : defaultTutorials;
-            quizzesData = (db.quizzes && db.quizzes.length > 0) ? db.quizzes : defaultQuizzes;
-            
-            communityPosts = db.posts || [];
-            projectsData = db.projects || [];
-            dbUsers = db.users || [];
-            roadmapData = db.roadmap || {};
-            solvedQuizzesData = db.user_quizzes || {};
-        }
-    } catch (e) {
-        console.error("Server nelze kontaktovat. Běžíme v nouzovém režimu.", e);
-        coursesData = defaultCourses;
-        tutorialsData = defaultTutorials;
-        quizzesData = defaultQuizzes;
-    }
-    
-    // Odstraníme načítací obrazovku a pustíme standardní aplikaci
-    document.getElementById('serverLoading')?.remove();
-
+// --- INICIALIZACE APLIKACE ---
+document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     initNavigation();
+    initTheme();
     initCourses();
     initTutorials();
     initQuizzes();
@@ -371,7 +320,6 @@ function initAuth() {
     const registerForm = document.getElementById('registerForm');
     const errorMsg = document.getElementById('loginError');
 
-    // Relace uživatele zůstává v lokálním prohlížeči, abychom ho po zavření okna neodhlašovali
     const savedUser = localStorage.getItem('ryvexo-user');
     if (savedUser) { 
         currentUser = JSON.parse(savedUser); 
@@ -404,10 +352,11 @@ function initAuth() {
             return;
         }
 
+        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         const foundUser = dbUsers.find(u => u.email === email && u.password === pass);
 
         if (foundUser) {
-            currentUser = { username: foundUser.username, email: foundUser.email, xp: foundUser.xp || 0, level: 1, role: 'student', currentAvatar: foundUser.currentAvatar };
+            currentUser = { username: foundUser.username, email: foundUser.email, xp: foundUser.xp || 0, level: 1, role: 'student' };
             finalizeLogin();
         } else { 
             errorMsg.textContent = "Špatný e-mail nebo heslo. Máš už vytvořený účet?";
@@ -415,7 +364,7 @@ function initAuth() {
         }
     });
 
-    if(registerForm) registerForm.addEventListener('submit', async (e) => {
+    if(registerForm) registerForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const user = document.getElementById('regUsername').value.trim();
         const email = document.getElementById('regEmail').value.trim();
@@ -428,19 +377,19 @@ function initAuth() {
             return;
         }
 
+        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         if (dbUsers.find(u => u.email === email)) {
             errorMsg.innerHTML = "Tento e-mail už je zaregistrovaný!";
             errorMsg.classList.remove('hidden');
             return;
         }
 
-        // Přidání do centrální DB uživatelů
         dbUsers.push({ username: user, email: email, password: pass, xp: 0 });
-        await apiSave('users', dbUsers);
+        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
 
         currentUser = { username: user, email: email, xp: 0, level: 1, role: 'student' };
         finalizeLogin(); 
-        showToast('Účet byl úspěšně vytvořen na serveru!');
+        showToast('Účet byl úspěšně vytvořen!');
     });
 
     function finalizeLogin() {
@@ -465,13 +414,13 @@ function initAuth() {
         appContent.classList.add('hidden');
     }
 
-    window.logout = async function() {
+    window.logout = function() {
         if (currentUser && currentUser.role === 'student') {
+            const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
             const userIndex = dbUsers.findIndex(u => u.email === currentUser.email);
             if (userIndex > -1) {
                 dbUsers[userIndex].xp = currentUser.xp;
-                // Uložíme finální stav XP na server při odhlášení
-                await apiSave('users', dbUsers);
+                localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
             }
         }
         currentUser = null; 
@@ -684,10 +633,10 @@ function initTutorials() {
     const list = document.getElementById('tutorialsList'); 
     const searchInput = document.getElementById('tutorialSearch');
 
-    window.deleteTutorial = async function(id) { 
+    window.deleteTutorial = function(id) { 
         if(!confirm('Smazat tutoriál?')) return; 
         tutorialsData = tutorialsData.filter(t => t.id !== id); 
-        await apiSave('tutorials', tutorialsData);
+        localStorage.setItem('ryvexo-tut-data-v2', JSON.stringify(tutorialsData)); 
         showToast('Smazáno.'); 
         renderTutorials(); 
     };
@@ -761,13 +710,13 @@ function initQuizzes() {
 
     function getSolvedQuizzes() {
         if (!currentUser) return [];
-        return solvedQuizzesData[currentUser.username] || [];
+        return JSON.parse(localStorage.getItem(`ryvexo-quizzes-${currentUser.username}`)) || [];
     }
 
-    window.deleteQuiz = async function(id) {
+    window.deleteQuiz = function(id) {
         if(!confirm('Smazat kvíz?')) return;
         quizzesData = quizzesData.filter(q => q.id !== id);
-        await apiSave('quizzes', quizzesData);
+        localStorage.setItem('ryvexo-quiz-data', JSON.stringify(quizzesData));
         showToast('Smazáno.');
         renderQuizzes();
     };
@@ -808,7 +757,7 @@ function initQuizzes() {
         });
     };
 
-    window.answerQuiz = async function(quizId, selectedIndex, btnElement) {
+    window.answerQuiz = function(quizId, selectedIndex, btnElement) {
         if(!currentUser) { showToast('Musíš se přihlásit!'); return; }
 
         const quiz = quizzesData.find(q => q.id === quizId);
@@ -818,13 +767,12 @@ function initQuizzes() {
             btnElement.style.color = '#4ade80';
             showToast(`Správně! +${quiz.xpReward} XP.`);
 
-            solvedQuizzesData[currentUser.username] = solvedQuizzesData[currentUser.username] || [];
-            solvedQuizzesData[currentUser.username].push(quizId);
-            await apiSave('user_quizzes', solvedQuizzesData);
+            const solved = getSolvedQuizzes();
+            solved.push(quizId);
+            localStorage.setItem(`ryvexo-quizzes-${currentUser.username}`, JSON.stringify(solved));
 
             currentUser.xp += quiz.xpReward;
             localStorage.setItem('ryvexo-user', JSON.stringify(currentUser));
-            await syncUserToDb(currentUser);
 
             refreshAllViews();
             setTimeout(renderQuizzes, 800); 
@@ -845,29 +793,26 @@ function initRoadmap() {
     const container = document.getElementById('roadmapTimeline'); 
     const fill = document.getElementById('roadmapFill'); 
     const pctText = document.getElementById('roadmapPercentage');
+    let savedProgress = JSON.parse(localStorage.getItem('ryvexo-roadmap')) || {};
 
     function updateProgressBar() {
         const total = roadmapSteps.length; 
-        const myData = (currentUser && roadmapData[currentUser.username]) ? roadmapData[currentUser.username] : {};
-        const completed = Object.values(myData).filter(v => v).length; 
+        const completed = Object.values(savedProgress).filter(v => v).length; 
         const pct = Math.round((completed / total) * 100);
         fill.style.width = `${pct}%`; 
         pctText.textContent = `${pct}%`;
 
         if (currentUser && pct > 0) { 
-            currentUser.xp += completed * 300; // Tato logika sčítá XP, pro jednoduchost necháme původní
+            currentUser.xp = completed * 300; 
             localStorage.setItem('ryvexo-user', JSON.stringify(currentUser)); 
-            syncUserToDb(currentUser);
             if(window.updateDashboardUI) window.updateDashboardUI(); 
         }
     }
 
-    window.renderRoadmap = function() {
+    function renderRoadmap() {
         container.innerHTML = '';
-        const myData = (currentUser && roadmapData[currentUser.username]) ? roadmapData[currentUser.username] : {};
-        
         roadmapSteps.forEach(step => {
-            const isDone = myData[step.id] || false;
+            const isDone = savedProgress[step.id] || false;
             container.innerHTML += `
                 <div class="roadmap-step ${isDone ? 'completed' : ''}" data-id="${step.id}">
                     <div class="step-checkbox"><i class="fa-solid fa-check"></i></div>
@@ -876,16 +821,13 @@ function initRoadmap() {
         });
 
         document.querySelectorAll('.roadmap-step').forEach(el => {
-            el.addEventListener('click', async () => { 
-                if(!currentUser) { showToast('Musíš se přihlásit!'); return; }
+            el.addEventListener('click', () => { 
                 const id = el.dataset.id; 
-                roadmapData[currentUser.username] = roadmapData[currentUser.username] || {};
-                roadmapData[currentUser.username][id] = !roadmapData[currentUser.username][id]; 
-                await apiSave('roadmap', roadmapData);
-                
+                savedProgress[id] = !savedProgress[id]; 
+                localStorage.setItem('ryvexo-roadmap', JSON.stringify(savedProgress)); 
                 el.classList.toggle('completed'); 
                 updateProgressBar(); 
-                if(roadmapData[currentUser.username][id]) showToast('Krok splněn! +300 XP'); 
+                if(savedProgress[id]) showToast('Krok splněn! +300 XP'); 
             });
         });
     }
@@ -899,7 +841,7 @@ function initCommunity() {
     const feed = document.getElementById('communityFeed'); 
     const formContainer = document.getElementById('postFormContainer');
 
-    window.toggleReaction = async function(postId, reactType) {
+    window.toggleReaction = function(postId, reactType) {
         if (!currentUser) { showToast('Musíš se přihlásit!'); return; }
         const post = communityPosts.find(p => p.id === postId);
         if (post) {
@@ -915,17 +857,13 @@ function initCommunity() {
                 post.reactions[reactType]++;
                 post.reactions.users[currentUser.username] = reactType;
             }
-            await apiSave('posts', communityPosts);
             window.renderCommunityFeed();
         }
     };
 
-    window.deletePost = async function(id) { 
+    window.deletePost = function(id) { 
         if(!confirm('Smazat?')) return; 
-        communityPosts = communityPosts.filter(p => p.id !== id); 
-        await apiSave('posts', communityPosts);
-        showToast('Smazáno.'); 
-        window.renderCommunityFeed(); 
+        communityPosts = communityPosts.filter(p => p.id !== id); showToast('Smazáno.'); window.renderCommunityFeed(); 
     };
 
     window.toggleComments = function(id) {
@@ -933,7 +871,7 @@ function initCommunity() {
         if (el) el.classList.toggle('hidden');
     };
 
-    window.addComment = async function(postId) {
+    window.addComment = function(postId) {
         if (!currentUser) { showToast('Musíš se přihlásit!'); return; }
         const input = document.getElementById(`comment-input-${postId}`);
         const text = input.value.trim();
@@ -944,13 +882,13 @@ function initCommunity() {
             if(!post.comments) post.comments = [];
             const av = currentUser.currentAvatar || 'fa-user-astronaut';
             post.comments.push({ author: currentUser.username, text: text, avatar: av });
-            await apiSave('posts', communityPosts);
             showToast('Komentář přidán.');
             window.renderCommunityFeed();
         }
     };
 
     window.renderCommunityFeed = function() {
+        localStorage.setItem('ryvexo-posts', JSON.stringify(communityPosts)); 
         if(!feed) return; 
         feed.innerHTML = ''; 
         const isTeacher = currentUser && currentUser.role === 'teacher';
@@ -961,6 +899,7 @@ function initCommunity() {
             const r = post.reactions || { fire: 0, idea: 0, bug: 0, users: {} };
             const myR = currentUser ? (r.users && r.users[currentUser.username]) : null;
 
+            let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
             const authorDb = dbUsers.find(u => u.username === post.author);
             const authorLvl = authorDb ? (Math.floor((authorDb.xp || 0) / 600) + 1) : 1;
             const authorRank = window.getUserRank(authorLvl);
@@ -1009,15 +948,11 @@ function initCommunity() {
 
     document.getElementById('newPostBtn')?.addEventListener('click', () => { formContainer.classList.remove('hidden'); });
     document.getElementById('cancelPostBtn')?.addEventListener('click', () => { formContainer.classList.add('hidden'); document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; });
-    document.getElementById('submitPostBtn')?.addEventListener('click', async () => {
+    document.getElementById('submitPostBtn')?.addEventListener('click', () => {
         const contentInp = document.getElementById('postContent').value.trim(); const tagInp = document.getElementById('postTag').value.trim();
         if (contentInp === '') return;
         communityPosts.push({ id: Date.now(), author: currentUser.username, text: contentInp, tag: tagInp || '#ryvexo', reactions: { fire:0, idea:0, bug:0, users:{} }, comments: [] });
-        await apiSave('posts', communityPosts);
-        window.renderCommunityFeed(); 
-        formContainer.classList.add('hidden'); 
-        document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; 
-        showToast('Publikováno!');
+        window.renderCommunityFeed(); formContainer.classList.add('hidden'); document.getElementById('postContent').value = ''; document.getElementById('postTag').value = ''; showToast('Publikováno!');
     });
 
     window.renderCommunityFeed();
@@ -1028,13 +963,23 @@ function initLeaderboard() {
     const list = document.getElementById('leaderboardList');
     window.renderLeaderboard = function() {
         if(!list) return; 
+        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         
+        if (currentUser && currentUser.role !== 'teacher') {
+            const existingIndex = dbUsers.findIndex(u => u.email === currentUser.email);
+            if (existingIndex > -1) { 
+                dbUsers[existingIndex].xp = currentUser.xp; 
+                dbUsers[existingIndex].currentAvatar = currentUser.currentAvatar; 
+            } else { 
+                dbUsers.push({ username: currentUser.username, email: currentUser.email, xp: currentUser.xp, currentAvatar: currentUser.currentAvatar }); 
+            }
+            localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
+        }
         dbUsers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); 
         list.innerHTML = '';
-        const realUsers = dbUsers.filter(u => u.email !== 'ucitel@ryvexo.cz');
-        if (realUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec); text-align: center; padding: 1rem;">Zatím žádní registrovaní studenti.</p>'; return; }
+        if (dbUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec); text-align: center; padding: 1rem;">Zatím žádní registrovaní studenti.</p>'; return; }
         
-        realUsers.forEach((user, index) => {
+        dbUsers.forEach((user, index) => {
             let rankStyle = "color: var(--text-sec); font-size: 1.2rem;"; 
             let medal = ""; let bgStyle = "background: rgba(255,255,255,0.02);";
             if(index === 0) { rankStyle = "color: #fbbf24; font-size: 1.5rem;"; medal = '<i class="fa-solid fa-trophy" style="color: #fbbf24; margin-right: 10px;"></i>'; bgStyle = "background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.3);"; }
@@ -1125,7 +1070,7 @@ function initDashboard() {
         }
     };
 
-    document.getElementById('saveTutBtn')?.addEventListener('click', async () => {
+    document.getElementById('saveTutBtn')?.addEventListener('click', () => {
         const title = document.getElementById('addTutTitle').value; 
         const category = document.getElementById('addTutCategory').value; 
         const time = document.getElementById('addTutTime').value; 
@@ -1162,14 +1107,14 @@ function initDashboard() {
         };
 
         tutorialsData.push(newTut);
-        await apiSave('tutorials', tutorialsData);
+        localStorage.setItem('ryvexo-tut-data-v2', JSON.stringify(tutorialsData)); 
         showToast('Nová lekce byla publikována!');
         
         document.querySelectorAll('#adminFormTut input, #adminFormTut textarea').forEach(el => el.value = '');
         if(window.renderTutorials) window.renderTutorials();
     });
 
-    document.getElementById('saveQuizBtn')?.addEventListener('click', async () => {
+    document.getElementById('saveQuizBtn')?.addEventListener('click', () => {
         const title = document.getElementById('addQuizTitle').value; 
         const question = document.getElementById('addQuizQuestion').value;
         const opts = [
@@ -1183,18 +1128,18 @@ function initDashboard() {
         if(!title || !question || opts.includes('')) return;
 
         quizzesData.push({ id: Date.now(), title, question, options: opts, correctIndex, xpReward });
-        await apiSave('quizzes', quizzesData);
+        localStorage.setItem('ryvexo-quiz-data', JSON.stringify(quizzesData)); 
         showToast('Publikováno!');
         if(window.renderQuizzes) window.renderQuizzes();
     });
 
-    document.getElementById('submitProjectBtn')?.addEventListener('click', async () => {
+    document.getElementById('submitProjectBtn')?.addEventListener('click', () => {
         const title = document.getElementById('projTitle').value.trim(); 
         const desc = document.getElementById('projDesc').value.trim();
         if(!title) return; 
-        
-        projectsData.push({ id: Date.now(), student: currentUser.username, title, desc, date: new Date().toLocaleDateString('cs-CZ'), feedback: null });
-        await apiSave('projects', projectsData);
+        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
+        projects.push({ id: Date.now(), student: currentUser.username, title, desc, date: new Date().toLocaleDateString('cs-CZ'), feedback: null });
+        localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
         showToast('Odesláno!'); 
         renderStudentProjects();
     });
@@ -1202,7 +1147,8 @@ function initDashboard() {
     function renderStudentProjects() {
         const list = document.getElementById('studentProjectsList'); 
         if(!list) return;
-        const myProjects = projectsData.filter(p => p.student === currentUser.username);
+        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
+        const myProjects = projects.filter(p => p.student === currentUser.username);
         list.innerHTML = ''; 
         myProjects.reverse().forEach(p => {
             list.innerHTML += `
@@ -1217,21 +1163,23 @@ function initDashboard() {
         });
     }
 
-    window.saveFeedback = async function(id) {
+    window.saveFeedback = function(id) {
         const feedbackText = document.getElementById(`feedback-${id}`).value; 
-        const projIndex = projectsData.findIndex(p => p.id === id);
+        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
+        const projIndex = projects.findIndex(p => p.id === id);
         if(projIndex > -1) { 
-            projectsData[projIndex].feedback = feedbackText; 
-            await apiSave('projects', projectsData);
+            projects[projIndex].feedback = feedbackText; 
+            localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
             showToast('Hodnocení odesláno!'); 
             renderTeacherProjects(); 
         }
     };
 
-    window.deleteProject = async function(id) {
+    window.deleteProject = function(id) {
         if(!confirm('Smazat projekt?')) return; 
-        projectsData = projectsData.filter(p => p.id !== id); 
-        await apiSave('projects', projectsData);
+        let projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
+        projects = projects.filter(p => p.id !== id); 
+        localStorage.setItem('ryvexo-projects', JSON.stringify(projects)); 
         showToast('Smazáno.'); 
         renderTeacherProjects();
     };
@@ -1239,8 +1187,9 @@ function initDashboard() {
     function renderTeacherProjects() {
         const list = document.getElementById('teacherProjectsList'); 
         if(!list) return;
+        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || []; 
         list.innerHTML = '';
-        projectsData.reverse().forEach(p => {
+        projects.reverse().forEach(p => {
             const isGraded = p.feedback && p.feedback.trim() !== ""; 
             const borderColor = isGraded ? 'var(--border)' : '#fbbf24';
             list.innerHTML += `
@@ -1261,10 +1210,11 @@ function initDashboard() {
         });
     }
 
-    window.deleteStudentAccount = async function(email) {
+    window.deleteStudentAccount = function(email) {
         if(!confirm(`Opravdu chceš smazat účet studenta (${email})?`)) return;
+        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         dbUsers = dbUsers.filter(u => u.email !== email);
-        await apiSave('users', dbUsers);
+        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
         showToast('Účet studenta byl smazán.');
         renderTeacherUsers();
         if(window.renderLeaderboard) window.renderLeaderboard();
@@ -1273,7 +1223,8 @@ function initDashboard() {
     function renderTeacherUsers() {
         const list = document.getElementById('teacherUsersList');
         if(!list) return;
-        if(dbUsers.length <= 1) { list.innerHTML = '<p style="color: var(--text-sec);">Žádní registrovaní studenti.</p>'; return; }
+        let dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
+        if(dbUsers.length === 0) { list.innerHTML = '<p style="color: var(--text-sec);">Žádní registrovaní studenti.</p>'; return; }
         list.innerHTML = '';
         dbUsers.forEach(u => {
             if(u.email === 'ucitel@ryvexo.cz') return;
@@ -1294,12 +1245,14 @@ function initDashboard() {
     window.renderTeacherStats = function() {
         const statsEl = document.getElementById('teacherStatsGrid');
         if(!statsEl) return;
+        const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
         const students = dbUsers.filter(u => u.email !== 'ucitel@ryvexo.cz');
-        const pendingProj = projectsData.filter(p => !p.feedback).length;
+        const projects = JSON.parse(localStorage.getItem('ryvexo-projects')) || [];
+        const pendingProj = projects.filter(p => !p.feedback).length;
 
         let totalQuizzesDone = 0;
         students.forEach(s => {
-            const sq = solvedQuizzesData[s.username] || [];
+            const sq = JSON.parse(localStorage.getItem(`ryvexo-quizzes-${s.username}`)) || [];
             totalQuizzesDone += sq.length;
         });
 
@@ -1449,15 +1402,23 @@ window.insertList = function(targetId) {
 };
 
 // --- ÚPRAVA PROFILU A AVATARI ---
-window.buyOrEquipAvatar = async function(avatarId, reqXp) {
+window.syncUserToDb = function(userObj) {
+    if(!userObj || userObj.role === 'teacher') return;
+    const dbUsers = JSON.parse(localStorage.getItem('ryvexo-users-db')) || [];
+    const index = dbUsers.findIndex(u => u.email === userObj.email);
+    if (index > -1) {
+        dbUsers[index].xp = userObj.xp; dbUsers[index].currentAvatar = userObj.currentAvatar;
+        localStorage.setItem('ryvexo-users-db', JSON.stringify(dbUsers));
+    }
+};
+
+window.buyOrEquipAvatar = function(avatarId, reqXp) {
     if(!currentUser) return;
     if (currentUser.currentAvatar === avatarId) return; 
     if (currentUser.xp >= reqXp) {
         currentUser.currentAvatar = avatarId;
         localStorage.setItem('ryvexo-user', JSON.stringify(currentUser));
-        await syncUserToDb(currentUser); 
-        showToast('Nová ikonka úspěšně nasazena!'); 
-        refreshAllViews();
+        syncUserToDb(currentUser); showToast('Nová ikonka úspěšně nasazena!'); refreshAllViews();
     }
 };
 
@@ -1493,14 +1454,14 @@ window.getUserRank = function(level) {
     return { title: "Tester", frameClass: "frame-lvl-1", titleClass: "title-lvl-1" };
 };
 
-// --- ANIMACE POČÍTADEL (Reálná data ze serveru) ---
+// --- ANIMACE POČÍTADEL (Reálná data) ---
 window.animateCounters = function() {
     let totalLessons = 0;
     coursesData.forEach(c => totalLessons += (c.lessonItems ? c.lessonItems.length : c.lessons));
     document.getElementById('statLekce')?.setAttribute('data-target', totalLessons);
     document.getElementById('statTuts')?.setAttribute('data-target', tutorialsData.length);
     
-    const dbUsersCount = dbUsers.length;
+    const dbUsersCount = (JSON.parse(localStorage.getItem('ryvexo-users-db')) || []).length;
     document.getElementById('statUsers')?.setAttribute('data-target', dbUsersCount > 0 ? dbUsersCount : 1);
 
     const stats = document.querySelectorAll('.stat-number');
